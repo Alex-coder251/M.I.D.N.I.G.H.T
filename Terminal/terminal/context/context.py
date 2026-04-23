@@ -158,8 +158,8 @@ class Context:
         return self.decoded_data["range_spell_stop_list"]
 
     @property
-    def spell_stop_blacklist(self) -> list[str]:
-        return self.decoded_data['spell_stop_blacklist']
+    def spell_stop_list(self) -> list[str]:
+        return self.decoded_data['spell_stop_list']
 
     @property
     def spell_queue_window(self) -> float:
