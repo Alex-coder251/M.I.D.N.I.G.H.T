@@ -70,4 +70,5 @@ local function InitFrame()
     dispel_blacklist:register_callback(updateCell)
 
     updateCell(dispel_blacklist:get_value())
-end)
+end
+insert(MartixInitFuncs, InitFrame)

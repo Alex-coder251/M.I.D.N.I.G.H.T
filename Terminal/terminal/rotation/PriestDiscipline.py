@@ -4,8 +4,9 @@ from .base import BaseRotation
 from terminal.context import Context, Unit
 from datetime import datetime
 
-
-__all__ = ["PriestDiscipline",]
+__all__ = [
+    "PriestDiscipline",
+]
 
 
 class DisciplinePartyMember(Unit):
@@ -112,8 +113,8 @@ class PriestDiscipline(BaseRotation):
             health_base = health_percent - heal_absorbs
 
             # 计算hot数量，并且每个hot，增加大约点血量。
-            rejuvenation_count = 0      # 回春数量，萌芽算回春（游戏机制）
-            hot_count = 0               # hot机制下的总层数，回春、萌芽、灌注、耀、纯净术都算
+            rejuvenation_count = 0  # 回春数量，萌芽算回春（游戏机制）
+            hot_count = 0  # hot机制下的总层数，回春、萌芽、灌注、耀、纯净术都算
             if rejuvenation_remaining > spell_queue_window:
                 rejuvenation_count += 1
                 hot_count += 1
@@ -130,10 +131,16 @@ class PriestDiscipline(BaseRotation):
             if member.isPlayerCastingTarget:
                 if ctx.player.castIcon == "灌注":
                     # print(f"{member.unitToken}正在被施法选中{health_base}")
-                    health_base = health_base + 15  # 假设玩家正在施放的灌注会被打断，那么就把这个灌注提供的血量加回基线里，数值越低说明越危险。
+                    health_base = (
+                        health_base + 15
+                    )  # 假设玩家正在施放的灌注会被打断，那么就把这个灌注提供的血量加回基线里，数值越低说明越危险。
 
             # 先找出单位身上可驱散的 debuff，再按黑名单过滤。
-            dispel_list = [debuff.title for debuff in member.debuff if (debuff.type in self.dispel_types)]
+            dispel_list = [
+                debuff.title
+                for debuff in member.debuff
+                if (debuff.type in self.dispel_types)
+            ]
             can_dispel = len(dispel_list) > 0
             for dispel in dispel_list:
                 if dispel in self.dispel_blacklist:
@@ -141,7 +148,11 @@ class PriestDiscipline(BaseRotation):
                     break
 
             # 记录完整 debuff 列表，方便调试和后续扩展判断。
-            debuff_list = [debuff.title for debuff in member.debuff if (debuff.title not in ["嗜血", "英勇", "赛季词缀", "良性Debuff"])]
+            debuff_list = [
+                debuff.title
+                for debuff in member.debuff
+                if (debuff.title not in ["嗜血", "英勇", "赛季词缀", "良性Debuff"])
+            ]
             # print(f"{member.unitToken}的debuff列表: {debuff_list}")
 
             # 记录完整 buff 列表，方便调试和后续扩展判断。
@@ -152,7 +163,9 @@ class PriestDiscipline(BaseRotation):
             # 积分计算过程
             # 积分是基于血量基线的，血量基线越低说明越危险，优先级越高。
             # 积分是后续所有判断的标准。
-            health_score = health_base + damage_absorbs  # 基础健康分数，治疗吸收越多越安全
+            health_score = (
+                health_base + damage_absorbs
+            )  # 基础健康分数，治疗吸收越多越安全
 
             # 角色修正
             # 坦克的积分视为身上有3个hot。
@@ -169,19 +182,27 @@ class PriestDiscipline(BaseRotation):
             health_score = min(health_score, 100)
 
             member.rejuvenation_remaining = rejuvenation_remaining  # 占位1剩余时间
-            member.germination_remaining = germination_remaining  # 萌芽剩余时间，等价于第二个回春
+            member.germination_remaining = (
+                germination_remaining  # 萌芽剩余时间，等价于第二个回春
+            )
             member.regrowth_remaining = regrowth_remaining  # 灌注剩余时间
             member.wild_growth_remaining = wild_growth_remaining  # 耀剩余时间
             member.lifebloom_remaining = lifebloom_remaining  # 纯净术剩余时间
             member.health_score = health_score  # 综合健康分数，数值越低越优先处理
             member.health_deficit = health_deficit  # 血量缺口，数值越高说明越缺治疗
-            member.health_base = health_base  # 当前血量减治疗吸收后的基线，数值越低越危险
+            member.health_base = (
+                health_base  # 当前血量减治疗吸收后的基线，数值越低越危险
+            )
             member.dispel_list = dispel_list  # 可驱散debuff列表
             member.debuff_list = debuff_list  # debuff列表
             member.buff_list = buff_list  # buff列表
-            member.rejuvenation_count = rejuvenation_count  # 回春层数，可能是 0 层、1 层、2 层
+            member.rejuvenation_count = (
+                rejuvenation_count  # 回春层数，可能是 0 层、1 层、2 层
+            )
             member.can_dispel = can_dispel  # 是否有可驱散的debuff
-            member.hot_count = hot_count  # 身上剩余的 HoT 数量（回春、萌芽、灌注、耀、纯净术）
+            member.hot_count = (
+                hot_count  # 身上剩余的 HoT 数量（回春、萌芽、灌注、耀、纯净术）
+            )
         #     print(f"{member.unitToken}的状态: 血量基线={health_base:.2f}%", end="; ")
         # print(f"{datetime.now().strftime('%H:%M:%S')}")
         return party_members
