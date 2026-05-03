@@ -271,7 +271,7 @@ class DemonHunterDevourer(BaseRotation):
                 and not potion_of_recklessness_exists
                 # and ctx.spell_cooldown_ready("鲁莽药水", spell_queue_window)
             ):
-                self.cast("鲁莽药水")
+                return self.cast("鲁莽药水")
 
             # ── 单体模式：虚空射线优先级上调至最高 ─────────────────────
             if not is_aoe:
