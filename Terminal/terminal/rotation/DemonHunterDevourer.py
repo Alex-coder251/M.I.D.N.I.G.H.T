@@ -47,7 +47,7 @@ class DemonHunterDevourer(BaseRotation):
         target = ctx.target
         focus = ctx.focus
         mouseover = ctx.mouseover
-        # print(f"上一次施法：{ctx.latest_succeeded_cast}")
+        latest_succeeded_cast = ctx.latest_succeeded_cast
 
         # ── 设置项读取 ──────────────────────────────────────────────
 
@@ -59,60 +59,51 @@ class DemonHunterDevourer(BaseRotation):
 
         # 灵魂碎片（玩家身上）
         soul_fragments_cell = ctx.spec.cell(0)
-        if soul_fragments_cell is None:
-            soul_fragments = 0
-        else:
-            soul_fragments = int(
-                soul_fragments_cell.mean / 5
-            )  # 与specs.lua对应 计算该单元格内所有像素的平均灰度值（0-255 范围），.mean / 5 将 0-255 的像素亮度转换为灵魂碎片数量刻度（0-51 左右）
+        soul_fragments = (
+            0 if soul_fragments_cell is None else int(soul_fragments_cell.mean / 5)
+        )
 
-        # print(f"当前灵魂碎片数量: {soul_fragments}")
-
-        # 获取恶魔之怒
-        # 恶魔之怒最大值，默认120，符能百分比是根据这个值来计算的。因为不同版本恶魔之怒的最大值可能不同，所以让用户自己设置这个值。
+        # 获取恶魔之怒最大值，默认120，恶魔之怒是根据这个值来计算的。因为不同版本恶魔之怒的最大值可能不同，所以让用户自己设置这个值。
         fury_max_cell = ctx.setting.cell(0)
-        if fury_max_cell is None:
-            fury_max = 120
-        else:
-            fury_max = fury_max_cell.mean
+        fury_max = 120 if fury_max_cell is None else fury_max_cell.mean
         fury = int(ctx.player.powerPercent * fury_max / 100)
 
-        # 斩杀血量阈值（默认15%）
+        # 斩杀血量阈值（默认10%）
         reaper_health_threshold_cell = ctx.setting.cell(4)
-        if reaper_health_threshold_cell is None:
-            reaper_health_threshold = 15
-        else:
-            reaper_health_threshold = int(reaper_health_threshold_cell.mean)
+        reaper_health_threshold = (
+            10
+            if reaper_health_threshold_cell is None
+            else int(reaper_health_threshold_cell.mean)
+        )
 
-        # 设置项
-        # 打断模式，默认黑名单模式，只有当施法名称不在黑名单中时才打断。另一种模式是任何可打断的施法都打断。
+        # 打断模式（blacklist / any）
         dh_interrupt_mode_cell = ctx.setting.cell(1)
-        if dh_interrupt_mode_cell is None:
-            dh_interrupt_mode = "blacklist"
-        else:
-            # DejaVu 侧当前用 255 表示 blacklist、127 表示 any，这里用 200 作为分界。
-            dh_interrupt_mode = (
-                "blacklist" if dh_interrupt_mode_cell.mean >= 200 else "any"
-            )
+        dh_interrupt_mode = (
+            "blacklist"
+            if dh_interrupt_mode_cell is None or dh_interrupt_mode_cell.mean >= 200
+            else "any"
+        )
         interrupt_blacklist = ctx.interrupt_blacklist
         spell_stop_list = ctx.spell_stop_list
         range_spell_stop_list = ctx.range_spell_stop_list
 
         # 开启保命血量阈值（默认60%）
         dh_health_threshold_cell = ctx.setting.cell(2)
-        if dh_health_threshold_cell is None:
-            dh_health_threshold = 60
-        else:
-            dh_health_threshold = int(dh_health_threshold_cell.mean)
+        dh_health_threshold = (
+            60
+            if dh_health_threshold_cell is None
+            else int(dh_health_threshold_cell.mean)
+        )
 
-        # 设置项 #
-        # 虚空射线符能溢出阈值，默认100，当符
+        # 虚空射线泄能怒气阈值（常态，默认100）
         fury_overflow_threshold_cell = ctx.setting.cell(3)
         fury_overflow_threshold = (
             100
             if fury_overflow_threshold_cell is None
             else int(fury_overflow_threshold_cell.mean)
         )
+
+        # enemy_count = 4 if player.enemyCount is None else player.enemyCount
 
         # ── 基础状态检查 ────────────────────────────────────────────
 
@@ -129,7 +120,10 @@ class DemonHunterDevourer(BaseRotation):
             return self.idle("正在施法")
 
         if player.channelIcon is not None:
-            # print(f"正在引导{player.channelIcon}")
+            # 引导中断：虚空射线目标丢失时停止引导
+            # if player.channelIcon == "虚空射线" and enemy_count == 0:
+            #     # 目标已全部死亡，停止引导虚空射线
+            #     return self.cast("停止施法")  # 或使用对应的取消宏
             return self.idle("正在引导")
 
         if player.isEmpowering:
@@ -141,13 +135,16 @@ class DemonHunterDevourer(BaseRotation):
         if not player.isInCombat:
             return self.idle("未进入战斗")
 
-        # print(f"{datetime.now()}", end=";")
-        # 主目标，必须是远程的可工具目标。
+        # ── 主目标确定 ──────────────────────────────────────────────
+
         main_target = None
         if focus.exists and focus.canAttack and focus.isInRangedRange:
             main_target = focus
         elif target.exists and target.canAttack and target.isInRangedRange:
             main_target = target
+
+        # if main_target is None:
+        #     return self.idle("没有合适的目标")
 
         # ── AOE判断 ─────────────────────────────────────────────────
         is_aoe = player.enemyCount >= aoe_enemy_count
@@ -185,44 +182,21 @@ class DemonHunterDevourer(BaseRotation):
         # ── 打断逻辑 ────────────────────────────────────────────────
 
         focus_need_interrupt = False
-        # 打断逻辑
-        # 停止施法名单检查：如果目标或焦点正在释放名单上的法术，则停止施法
-        if spell_stop_list:
-            if focus.exists and focus.canAttack and focus.isInRangedRange:
-                if (focus.anyCastIcon is not None) and (
-                    focus.anyCastIcon in spell_stop_list
-                ):
-                    return self.idle(f"目标释放停止施法法术: {focus.anyCastIcon}")
-            if target.exists and target.canAttack and target.isInRangedRange:
-                if (target.anyCastIcon is not None) and (
-                    target.anyCastIcon in spell_stop_list
-                ):
-                    return self.idle(f"目标释放停止施法法术: {target.anyCastIcon}")
-
         target_need_interrupt = False
-        focus_need_interrupt = False
+
         if focus.exists and focus.canAttack and focus.isInRangedRange:
-            if (focus.anyCastIcon is not None) and focus.anyCastIsInterruptible:
-                # print(focus.anyCastIcon)
+            if focus.anyCastIcon is not None and focus.anyCastIsInterruptible:
                 if dh_interrupt_mode == "any":
                     focus_need_interrupt = True
-                elif dh_interrupt_mode == "blacklist":
-                    # 黑名单模式下，只有当施法名称不在黑名单中时才打断
-                    if not (focus.anyCastIcon in interrupt_blacklist):
-                        focus_need_interrupt = True
+                elif focus.anyCastIcon not in interrupt_blacklist:
+                    focus_need_interrupt = True
 
         if target.exists and target.canAttack and target.isInRangedRange:
-            # if target.castIcon:
-            #     if target.castIsInterruptible:
-            #         print("当前目标在施法,当前目标施法可以打断")
-            if (target.anyCastIcon is not None) and target.anyCastIsInterruptible:
-                # print("a")
+            if target.anyCastIcon is not None and target.anyCastIsInterruptible:
                 if dh_interrupt_mode == "any":
                     target_need_interrupt = True
-                elif dh_interrupt_mode == "blacklist":
-                    # 黑名单模式下，只有当施法名称不在黑名单中时才打断
-                    if not (target.anyCastIcon in interrupt_blacklist):
-                        target_need_interrupt = True
+                elif target.anyCastIcon not in interrupt_blacklist:
+                    target_need_interrupt = True
 
         if ctx.spell_cooldown_ready("瓦解", spell_queue_window, ignore_gcd=True):
             if focus_need_interrupt:
@@ -230,20 +204,18 @@ class DemonHunterDevourer(BaseRotation):
             elif target_need_interrupt:
                 return self.cast("target瓦解")
 
-        # 停止施法名单检查：如果目标或焦点正在释放名单上的法术，则停止施法
-        player_need_spell_stop = False
-        trigger_spell = None  # 初始化一个变量来记录是谁触发了黑名单
+        # ── 停止施法黑名单检查 ──────────────────────────────────────
 
-        if target.exists and (target.anyCastIcon in spell_stop_list):
+        trigger_spell = None
+        player_need_spell_stop = False
+        if target.exists and target.anyCastIcon in spell_stop_list:
             trigger_spell = target.anyCastIcon
             player_need_spell_stop = True
-        elif focus.exists and (focus.anyCastIcon in spell_stop_list):
+        elif focus.exists and focus.anyCastIcon in spell_stop_list:
             trigger_spell = focus.anyCastIcon
             player_need_spell_stop = True
 
-        # 执行停止逻辑
         if player_need_spell_stop:
-            # 这里的日志会动态显示到底是哪个技能触发的
             return self.idle(f"检测到黑名单技能 [{trigger_spell}]，停止施法")
 
         # ── 大范围技能停止施法黑名单检查 ──────────────────────────────
@@ -277,7 +249,7 @@ class DemonHunterDevourer(BaseRotation):
             # 预先计算各技能是否就绪
             star_ready = (
                 not player_need_specific_spell_stop
-                and soul_fragments >= 30
+                # and soul_fragments >= 30
                 and ctx.spell_cooldown_ready("坍缩之星", spell_queue_window)
             )
             void_ray_ready = (
@@ -291,6 +263,15 @@ class DemonHunterDevourer(BaseRotation):
                 and scattered_souls_fragments_count >= 10
                 and ctx.spell_cooldown_ready("根除", spell_queue_window)
             )
+
+            # 虚空变形后紧接着使用"鲁莽药水"
+            if (
+                latest_succeeded_cast == "虚空变形"
+                and player.burstPotionCooldownUsable
+                and ctx.gcd_ready(spell_queue_window)
+                and player.enemyCount >= 8
+            ):
+                return self.cast("鲁莽药水")
 
             # ── 单体模式：虚空射线优先级上调至最高 ─────────────────────
             if not is_aoe:
@@ -325,14 +306,9 @@ class DemonHunterDevourer(BaseRotation):
                 if eradication_craving_ready:
                     return self.cast("target根除")
 
-                # # 收割：有噬欲时刻时
-                # if (
-                #     fury >= 70
-                #     and scattered_souls_fragments_count >= 4
-                #     and moment_of_craving_exists
-                #     and ctx.spell_cooldown_ready("收割", spell_queue_window)
-                # ):
-                #     return self.cast("target收割")
+                # 3. 虚空射线
+                if void_ray_ready:
+                    return self.cast("虚空射线")
 
                 # 4. 吞噬
                 if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
@@ -371,11 +347,12 @@ class DemonHunterDevourer(BaseRotation):
             if ctx.spell_cooldown_ready("收割", spell_queue_window):
                 return self.cast("target收割")
 
-        # ── 2. 虚空变形：可用时立即触发 ────────────────────────────────
-        if ctx.spell_cooldown_ready("虚空变形", spell_queue_window):
-            # 当敌人数量 >= 8 时，先额外使用"鲁莽药水"
-            if player.enemyCount >= 8:
-                self.cast("鲁莽药水")
+        # ── 2. 虚空变形：怪物血量充足且可用时立即触发 ────────────────────────────────
+        if (
+            ctx.spell_cooldown_ready("虚空变形", spell_queue_window)
+            and main_target.healthPercent > reaper_health_threshold
+            and not player.isMoving
+        ):
             return self.cast("虚空变形")
 
         # ── 3. 根除：噬欲时刻激活 且 地上>=10魂 ───────────────────────
@@ -390,17 +367,11 @@ class DemonHunterDevourer(BaseRotation):
         if (
             not player_need_specific_spell_stop
             and not player.isMoving
+            and fury >= fury_overflow_threshold
             and target.isInRangedRange
             and ctx.spell_cooldown_ready("虚空射线", spell_queue_window)
         ):
             return self.cast("虚空射线")
-
-        # ── 引导中断：虚空射线目标丢失时停止引导 ───────────────────────
-        if player.channelIcon is not None:
-            if player.channelIcon == "虚空射线" and player.enemyCount == 0:
-                # 目标已全部死亡，停止引导虚空射线
-                return self.cast("停止施法")  # 或使用对应的取消宏
-            return self.idle("正在引导")
 
         # ── 5. 灵魂献祭：未激活时使用（理想情况下仅在变身外使用）────────
         # 注意：灵魂献祭在持续时间内可回复24%最大生命值，应急时可忽略此优先级限制
