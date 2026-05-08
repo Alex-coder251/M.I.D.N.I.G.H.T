@@ -310,7 +310,7 @@ class DemonHunterDevourer(BaseRotation):
                 latest_succeeded_cast == "虚空变形"
                 and player.burstPotionCooldownUsable
                 and ctx.gcd_ready(spell_queue_window)
-                and player.enemyCount >= 8
+                and player.enemyCount >= 6
             ):
                 return self.cast("鲁莽药水")
 
