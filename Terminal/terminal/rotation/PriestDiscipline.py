@@ -206,7 +206,9 @@ class PriestDiscipline(BaseRotation):
             health_score = (
                 health_base + damage_absorbs
             )  # 基础健康分数，治疗吸收越多越安全
-            health_score = health_base + damage_absorbs  # 基础健康分数，伤害吸收护盾越多越安全
+            health_score = (
+                health_base + damage_absorbs
+            )  # 基础健康分数，伤害吸收护盾越多越安全
 
             # 角色修正
             # 这样盾总会优先给自己。
@@ -306,7 +308,9 @@ class PriestDiscipline(BaseRotation):
             use_cale, 40, 50, powerpercent
         )
         # 技能队列窗口，施法中剩余时间小于这个值就算技能快要好了，可以提前衔接施放下一个技能，单位是秒
-        flash_heal_hp_threshold = self.threshold_calculator(use_cale, 40, 50, powerpercent)
+        flash_heal_hp_threshold = self.threshold_calculator(
+            use_cale, 40, 50, powerpercent
+        )
         # 施法保护阈值，剩余施法时间低于此值时不打断当前施法，单位百分比。设为 90 意味着始终等待施法完成（任何技能施法时间都远小于此值）
         cast_queue_window_threshold = 90
         # 引导保护阈值，剩余引导时间低于此值时不打断当前引导，单位是百分比。设为 90 意味着始终等待引导完成
@@ -394,7 +398,14 @@ class PriestDiscipline(BaseRotation):
             )
         ]
         # 无救赎且血量低于受伤阈值的队友【阈值默认 90，受法力平衡调节】
-        without_atonement_and_injured_unit = [member for member in party_members if (member.atonement_remaining <= 0 and member.health_base < injured_hp_threshold)]
+        without_atonement_and_injured_unit = [
+            member
+            for member in party_members
+            if (
+                member.atonement_remaining <= 0
+                and member.health_base < injured_hp_threshold
+            )
+        ]
         without_atonement_and_injured_unit.sort(key=lambda m: m.health_score)
         # 血量低于受伤阈值的队友
         injured_unit = [
@@ -453,14 +464,18 @@ class PriestDiscipline(BaseRotation):
                 if player.castIcon != "真言术：耀":
                     if ctx.spell_charges_ready("真言术：耀", 1, spell_queue_window):
                         if ctx.latest_succeeded_cast != "真言术：耀":
-                            return self.cast(f"{without_atonement_and_injured_unit[0].unitToken}耀")
+                            return self.cast(
+                                f"{without_atonement_and_injured_unit[0].unitToken}耀"
+                            )
 
         # 无救赎且受伤数量 >= 3、真言术：耀 可用，放 真言术：耀。
         if len(without_atonement_and_injured_unit) >= 3:
             if player.castIcon != "真言术：耀":
                 if ctx.spell_charges_ready("真言术：耀", 2, spell_queue_window):
                     if ctx.latest_succeeded_cast != "真言术：耀":
-                        return self.cast(f"{without_atonement_and_injured_unit[0].unitToken}耀")
+                        return self.cast(
+                            f"{without_atonement_and_injured_unit[0].unitToken}耀"
+                        )
 
         # 灌注爆发逻辑
         # 如果有3个人，血量低于涌动血线，且灌注可用，给自己灌注。
@@ -512,8 +527,6 @@ class PriestDiscipline(BaseRotation):
         if ctx.spell_cooldown_ready(
             "真言术：盾", spell_queue_window
         ) or ctx.spell_cooldown_ready("虚空之盾", spell_queue_window):
-        # 盾卡CD用出去
-        if ctx.spell_cooldown_ready("真言术：盾", spell_queue_window) or ctx.spell_cooldown_ready("虚空之盾", spell_queue_window):
             if len(without_atonement_and_injured_unit) > 0:
                 if without_atonement_and_injured_unit[
                     0
@@ -547,8 +560,6 @@ class PriestDiscipline(BaseRotation):
         if ctx.spell_cooldown_ready(
             "快速治疗", spell_queue_window
         ) or ctx.spell_cooldown_ready("暗影愈合", spell_queue_window):
-        # 没技能了，用快速治疗干拉血线最低的单位
-        if ctx.spell_cooldown_ready("快速治疗", spell_queue_window) or ctx.spell_cooldown_ready("暗影愈合", spell_queue_window):
             if lowest_health_percent.health_base < flash_heal_hp_threshold:
                 return self.cast(f"{lowest_health_percent.unitToken}快速治疗")
 

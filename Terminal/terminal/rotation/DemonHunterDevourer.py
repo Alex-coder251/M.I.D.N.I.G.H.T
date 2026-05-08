@@ -299,10 +299,11 @@ class DemonHunterDevourer(BaseRotation):
                 and ctx.spell_cooldown_ready("虚空射线", spell_queue_window)
             )
             eradication_craving_ready = (
-                moment_of_craving_exists
+                latest_succeeded_cast == "坍缩之星"
+                and 0 < moment_of_craving_remaining <= 3
                 and scattered_souls_fragments_count >= 10
                 and ctx.spell_cooldown_ready("根除", spell_queue_window)
-            )
+            )  # 坍缩之后秒根除可以强行打断根除的前摇，食欲时刻剩3-2秒的时候打坍缩后秒接根除收益最好
 
             # 虚空变形后紧接着使用"鲁莽药水"
             if (
@@ -323,9 +324,9 @@ class DemonHunterDevourer(BaseRotation):
                 if star_ready:
                     return self.cast("target坍缩之星")
 
-                # 3. 根除（噬欲时刻激活 且 地上>=10魂）
-                if eradication_craving_ready:
-                    return self.cast("target根除")
+                # # 3. 根除（噬欲时刻激活 且 地上>=10魂）根除单体负收益
+                # if eradication_craving_ready:
+                #     return self.cast("target根除")
 
                 # 4. 吞噬
                 if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
