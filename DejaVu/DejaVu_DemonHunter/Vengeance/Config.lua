@@ -14,7 +14,7 @@ if classFilename ~= "DEMONHUNTER" then
     C_AddOns.DisableAddOn(addonName)
     return
 end                                 -- 不是恶魔猎手则停止
-if currentSpec ~= 3 then return end -- 不是噬灭专精则停止
+if currentSpec ~= 2 then return end -- 不是复仇专精则停止
 
 local DejaVu = _G["DejaVu"]
 local Config = DejaVu.Config
@@ -22,47 +22,36 @@ local ConfigRows = DejaVu.ConfigRows
 local Cell = DejaVu.Cell
 local MartixInitFuncs = DejaVu.MartixInitFuncs
 
--- 1. 躺平模式配置（用于停止释放坍缩之星进入攒魂模式）
+-- 1. 恶魔之怒最大值配置（用于计算当前恶魔之怒数量）
 do
-    local lying_flat_mode = Config("lying_flat_mode")
+    local fury_max_config = Config("fury_max")
     insert(ConfigRows, {
-        type = "combo",
-        key = "lying_flat_mode",
-        name = "躺平模式",
-        tooltip = "选择躺平模式",
-        default_value = "blacklist",
-        options = {
-            { k = "turn_off", v = "关" },
-            { k = "turn_on", v = "开" }
-        },
-        bind_config = lying_flat_mode,
+        type = "slider",
+        key = "fury_max",
+        name = "最大恶魔之怒",
+        tooltip = "设置识别器的最大能量参考值（通常为 100 或 120）",
+        min_value = 90,
+        max_value = 120,
+        step = 1,
+        default_value = 120,
+        bind_config = fury_max_config,
     })
 
     local function InitFrame()
-        -- x:55 y:12
-        -- 用途：显示噬灭恶魔猎手躺平模式配置。
-        -- 更新函数：set_lying_flat_mode
-        local lying_flat_mode_cell = Cell:New(55, 12)
+        -- 对应识别位置 x:55 y:12
+        local fury_max_cell = Cell:New(55, 12)
 
-        -- 说明：根据打断模式配置更新显示强度。
-        -- 依赖事件更新：无
-        -- 依赖定时刷新：无
-        local function set_lying_flat_mode(value)
-            if value == "turn_off" then
-                lying_flat_mode_cell:setCellRGBA(255 / 255)
-            else
-                lying_flat_mode_cell:setCellRGBA(127 / 255)
-            end
+        local function set_fury_max(value)
+            -- 将配置值映射到 RGBA 输出，供外部程序读取
+            fury_max_cell:setCellRGBA(value / 255)
         end
 
-        lying_flat_mode:register_callback(set_lying_flat_mode)
-
-        set_lying_flat_mode(lying_flat_mode:get_value())
+        fury_max_config:register_callback(set_fury_max)
+        set_fury_max(fury_max_config:get_value())
     end
     insert(MartixInitFuncs, InitFrame)
 end
 
--- 2. 打断模式配置
 do
     local dh_interrupt_mode = Config("dh_interrupt_mode")
     insert(ConfigRows, {

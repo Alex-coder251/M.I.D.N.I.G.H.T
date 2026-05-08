@@ -13,7 +13,7 @@ DejaVu_Core.DEBUG = true             -- 是否开启调试模式
 DejaVu_Core.Enable = true            -- 是否开启插件
 DejaVu_Core.VERSION = "12.0.5.67165" -- 插件版本
 DejaVu_Core.RangedRange = 40         -- 默认的远程检测范围
-DejaVu_Core.MeleeRange = 25           -- 默认的短中程检测范围
+DejaVu_Core.MeleeRange = 5           -- 默认的近战程检测范围
 DejaVu_Core.BadgeTitleTable = {}     -- 脚标提示表（key格式: icon_r_g_b, value格式: {icon=图标路径或ID, color=脚标颜色, title=提示文本}）
 -- /dump DejaVu.BadgeTitleTable
 
@@ -36,21 +36,38 @@ DejaVu_Core.GetUIScaleFactor = GetUIScaleFactor
 
 
 
-DejaVu_Core.BurstTime = GetTime() + 60
+-- 爆发计时最大时长（秒）
+local BURST_MAX_DURATION = 60
+
+DejaVu_Core.BurstTime = 0
 
 DejaVu_Core.InBurst = function()
-    return DejaVu_Core.BurstTime > GetTime()
+    return DejaVu_Core.BurstTime > 0
 end
 
+-- 返回爆发已过时间（从0开始正向计时）
+DejaVu_Core.BurstElapsed = function()
+    if DejaVu_Core.BurstTime == 0 then
+        return 0
+    end
+    local elapsed = GetTime() - DejaVu_Core.BurstTime
+    return min(BURST_MAX_DURATION, max(0, elapsed))
+end
+
+-- 兼容旧代码，返回已过时间
 DejaVu_Core.BurstRemaining = function()
-    return min(60.0, max(0, DejaVu_Core.BurstTime - GetTime()))
+    if DejaVu_Core.BurstTime == 0 then
+        return 0
+    end
+    local elapsed = GetTime() - DejaVu_Core.BurstTime
+    return min(BURST_MAX_DURATION, max(0, elapsed))
 end
 
 SLASH_BURST1 = "/burst"
 SlashCmdList["BURST"] = function(msg)
     local delaySeconds = tonumber(msg)
     if delaySeconds then
-        DejaVu_Core.BurstTime = GetTime() + delaySeconds
+        DejaVu_Core.BurstTime = GetTime() - (delaySeconds or 0)
     end
 end
 

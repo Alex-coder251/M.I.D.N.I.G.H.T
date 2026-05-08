@@ -8,7 +8,6 @@ local insert                            = table.insert
 local CreateFrame                       = CreateFrame
 local UnitClass                         = UnitClass
 local GetSpecialization                 = GetSpecialization
-local GetTime                           = GetTime
 -- 新增需要的 API 引用
 local GetPlayerAuraBySpellID            = C_UnitAuras.GetPlayerAuraBySpellID
 local IsSpellKnown                      = C_SpellBook.IsSpellKnown
@@ -20,19 +19,12 @@ if classFilename ~= "DEMONHUNTER" then
     C_AddOns.DisableAddOn(addonName)
     return
 end                                 -- 不是恶魔猎手则停止
-if currentSpec ~= 3 then return end -- 不是噬灭专精则停止
+if currentSpec ~= 2 then return end -- 不是复仇专精则停止
 
 -- DejaVu Core
 local DejaVu = _G["DejaVu"]
 local Cell = DejaVu.Cell
 local MartixInitFuncs = DejaVu.MartixInitFuncs
-
--- 虚空变形 buff ID
-local VOID_ERUPTION_BUFF_ID = 1217607
--- 虚空变形持续时间（秒）
-local VOID_ERUPTION_DURATION = 30
-
-local voidEruptionStartTime = 0  -- 记录变身开始时间
 
 local function InitFrame()
     local eventFrame = CreateFrame("Frame")
@@ -64,24 +56,6 @@ local function InitFrame()
         if fastTimeElapsed > 0.1 then
             fastTimeElapsed = fastTimeElapsed - 0.1
             UpdateSoulFragments()
-        end
-    end)
-
-    -- 爆发计时：监听虚空变形 buff，开启/关闭爆发计时
-    -- buff 没有持续时间，需要自己计时
-    eventFrame:RegisterUnitEvent("UNIT_AURA", "player")
-    eventFrame:SetScript("OnEvent", function(self, event, unit)
-        local auraData = GetPlayerAuraBySpellID(VOID_ERUPTION_BUFF_ID)
-        if auraData then
-            -- buff 存在：记录起始时间，开启爆发计时
-            if voidEruptionStartTime == 0 then
-                voidEruptionStartTime = GetTime()
-            end
-            DejaVu.BurstTime = voidEruptionStartTime  -- 存储起始时间
-        else
-            -- buff 消失：关闭爆发计时，重置起始时间
-            voidEruptionStartTime = 0
-            DejaVu.BurstTime = 0
         end
     end)
 end
