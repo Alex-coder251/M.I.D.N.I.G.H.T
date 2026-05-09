@@ -30,6 +30,8 @@ class DemonHunterVengeance(BaseRotation):
             "target破裂": "SHIFT-NUMPAD2",
             "停止施法": "SHIFT-NUMPAD3",
             "恶魔尖刺": "SHIFT-NUMPAD4",
+            "治疗石": "SHIFT-NUMPAD5",
+            "治疗药水": "SHIFT-NUMPAD6",
         }
 
     def main_rotation(self, ctx: Context) -> tuple[str, float, str]:
@@ -86,7 +88,16 @@ class DemonHunterVengeance(BaseRotation):
         spell_stop_list = ctx.spell_stop_list
         range_spell_stop_list = ctx.range_spell_stop_list
 
-        # # 开启保命血量阈值（默认60%）
+        # 开启保命血量阈值（默认60%）
+        dh_health_threshold_cell = ctx.setting.cell(2)
+        dh_health_threshold = (
+            60
+            if dh_health_threshold_cell is None
+            else int(dh_health_threshold_cell.mean)
+        )
+
+        # 献祭光环buff检测（用于保命优先级判断）
+        fel_devastation_exists = player.hasBuff("献祭光环")
         # dh_health_threshold_cell = ctx.setting.cell(2)
         # dh_health_threshold = (
         #     60
@@ -161,17 +172,24 @@ class DemonHunterVengeance(BaseRotation):
         # 恶魔尖刺
         demonspikes_exists = player.hasBuff("恶魔尖刺")
 
-        # # 灵魂献祭
-        # soul_immolation_exists = player.hasBuff("灵魂献祭")
+        # ── 保命：献祭光环 > 治疗石 > 治疗药水 ──────────────────────
+        # 优先级：献祭光环 > 治疗石 > 治疗药水
+        # 任意一个可用则使用并跳过后续检查
+        if player.healthPercent < dh_health_threshold:
+            # 1. 献祭光环（应急，忽略常规优先级限制）
+            if (
+                not fel_devastation_exists
+                and ctx.spell_cooldown_ready("献祭光环", spell_queue_window)
+            ):
+                return self.cast("献祭光环")
 
-        # # ── 保命：献祭（应急，忽略常规优先级限制）──────────────────
-        # # 注意：灵魂献祭在持续时间内可回复24%最大生命值，应急时可在变身内外使用
-        # if (
-        #     not soul_immolation_exists
-        #     and player.healthPercent < dh_health_threshold
-        #     and ctx.spell_cooldown_ready("灵魂献祭", spell_queue_window)
-        # ):
-        #     return self.cast("灵魂献祭")
+            # 2. 治疗石
+            if player.healthstoneCooldownUsable:
+                return self.cast("治疗石")
+
+            # 3. 治疗药水
+            if player.healingPotionCooldownUsable:
+                return self.cast("治疗药水")
 
         # ── 打断逻辑 ────────────────────────────────────────────────
 

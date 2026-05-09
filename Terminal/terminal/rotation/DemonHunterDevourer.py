@@ -180,14 +180,25 @@ class DemonHunterDevourer(BaseRotation):
         # 灵魂献祭
         soul_immolation_exists = player.hasBuff("灵魂献祭")
 
-        # ── 保命：献祭（应急，忽略常规优先级限制）──────────────────
-        # 注意：灵魂献祭在持续时间内可回复24%最大生命值，应急时可在变身内外使用
-        if (
-            not soul_immolation_exists
-            and player.healthPercent < dh_health_threshold
-            and ctx.spell_cooldown_ready("灵魂献祭", spell_queue_window)
-        ):
-            return self.cast("灵魂献祭")
+        # ── 保命：献祭 > 治疗石 > 治疗药水 ──────────────────────────
+        # 优先级：灵魂献祭 > 治疗石 > 治疗药水
+        # 任意一个可用则使用并跳过后续检查
+        if player.healthPercent < dh_health_threshold:
+            # 1. 灵魂献祭（应急，忽略常规优先级限制）
+            # 灵魂献祭在持续时间内可回复24%最大生命值
+            if (
+                not soul_immolation_exists
+                and ctx.spell_cooldown_ready("灵魂献祭", spell_queue_window)
+            ):
+                return self.cast("灵魂献祭")
+
+            # 2. 治疗石
+            if player.healthstoneCooldownUsable:
+                return self.cast("治疗石")
+
+            # 3. 治疗药水
+            if player.healingPotionCooldownUsable:
+                return self.cast("治疗药水")
 
         # ── 打断逻辑 ────────────────────────────────────────────────
 
