@@ -31,6 +31,6 @@ insert(cooldownSpells, { spellID = 183752, name = "瓦解" }) --  [瓦解]
 insert(cooldownSpells, { spellID = 198589, name = "疾影" }) --  [疾影]
 insert(cooldownSpells, { spellID = 1236994, name = "鲁莽药水" }) --  [鲁莽药水]
 insert(cooldownSpells, { spellID = 6262, name = "治疗石" })
-insert(cooldownSpells, { spellID = 1262857, name = "治疗药水" })
+insert(cooldownSpells, { spellID = 1262857, name = "强效治疗药水" })
 
 insert(chargeSpells, { spellID = 1241937, name = "灵魂献祭" }) --  [灵魂献祭]

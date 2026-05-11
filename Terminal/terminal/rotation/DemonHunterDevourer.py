@@ -32,7 +32,7 @@ class DemonHunterDevourer(BaseRotation):
             "鲁莽药水": "SHIFT-NUMPAD3",
             "停止施法": "SHIFT-NUMPAD4",
             "治疗石": "SHIFT-NUMPAD5",
-            "治疗药水": "SHIFT-NUMPAD6",
+            "强效治疗药水": "SHIFT-NUMPAD6",
         }
 
     def main_rotation(self, ctx: Context) -> tuple[str, float, str]:
@@ -180,15 +180,14 @@ class DemonHunterDevourer(BaseRotation):
         # 灵魂献祭
         soul_immolation_exists = player.hasBuff("灵魂献祭")
 
-        # ── 保命：献祭 > 治疗石 > 治疗药水 ──────────────────────────
-        # 优先级：灵魂献祭 > 治疗石 > 治疗药水
+        # ── 保命：献祭 > 治疗石 > 强效治疗药水 ──────────────────────────
+        # 优先级：灵魂献祭 > 治疗石 > 强效治疗药水
         # 任意一个可用则使用并跳过后续检查
         if player.healthPercent < dh_health_threshold:
             # 1. 灵魂献祭（应急，忽略常规优先级限制）
             # 灵魂献祭在持续时间内可回复24%最大生命值
-            if (
-                not soul_immolation_exists
-                and ctx.spell_cooldown_ready("灵魂献祭", spell_queue_window)
+            if not soul_immolation_exists and ctx.spell_cooldown_ready(
+                "灵魂献祭", spell_queue_window
             ):
                 return self.cast("灵魂献祭")
 
@@ -196,9 +195,9 @@ class DemonHunterDevourer(BaseRotation):
             if player.healthstoneCooldownUsable:
                 return self.cast("治疗石")
 
-            # 3. 治疗药水
+            # 3. 强效治疗药水
             if player.healingPotionCooldownUsable:
-                return self.cast("治疗药水")
+                return self.cast("强效治疗药水")
 
         # ── 打断逻辑 ────────────────────────────────────────────────
 
@@ -305,6 +304,11 @@ class DemonHunterDevourer(BaseRotation):
                 # and soul_fragments >= 30
                 and ctx.spell_cooldown_ready("坍缩之星", spell_queue_window)
             )
+            star_ready_for_single = (
+                not player_need_specific_spell_stop
+                and soul_fragments >= 36
+                and ctx.spell_cooldown_ready("坍缩之星", spell_queue_window)
+            )
             void_ray_ready = (
                 not player_need_specific_spell_stop
                 and not player.isMoving
@@ -330,7 +334,7 @@ class DemonHunterDevourer(BaseRotation):
             # ── 单体模式：虚空射线优先级上调至最高 ─────────────────────
             if not is_aoe:
                 # 1. 虚空射线（单体最高优先）
-                if void_ray_ready:
+                if star_ready_for_single:
                     return self.cast("虚空射线")
 
                 # 2. 坍缩之星
