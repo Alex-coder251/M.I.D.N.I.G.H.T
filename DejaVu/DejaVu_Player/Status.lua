@@ -43,6 +43,7 @@ local COLOR = DejaVu.COLOR
 local Cell = DejaVu.Cell
 local BadgeCell = DejaVu.BadgeCell
 local MeleeRange = DejaVu.MeleeRange -- 默认的近战检测范围
+local BurstPotionID = DejaVu.BurstPotionID -- 爆发药水ID
 local MartixInitFuncs = DejaVu.MartixInitFuncs
 
 local function itemUsable(itemId)
@@ -275,7 +276,7 @@ local function InitFrame()
     -- 依赖事件更新：无。
     -- 依赖定时刷新：2秒。
     local function updateHealingItemUsable()
-        cell.healthstoneCooldownUsable:setCellBoolean(itemUsable(224464), COLOR.STATUS_BOOLEAN.HEALTHSTONE_USABLE, COLOR.BLACK)
+        cell.healthstoneCooldownUsable:setCellBoolean(itemUsable(5512), COLOR.STATUS_BOOLEAN.HEALTHSTONE_USABLE, COLOR.BLACK)
         cell.healingPotionCooldownUsable:setCellBoolean(itemUsable(258138), COLOR.STATUS_BOOLEAN.HEALING_POTION_USABLE, COLOR.BLACK)
     end
 
@@ -283,7 +284,7 @@ local function InitFrame()
     -- 依赖事件更新：无。
     -- 依赖定时刷新：2秒。
     local function updateBurstPotionUsable()
-        cell.burstPotionCooldownUsable:setCellBoolean(itemUsable(241289), COLOR.STATUS_BOOLEAN.HEALING_POTION_USABLE, COLOR.BLACK)
+        cell.burstPotionCooldownUsable:setCellBoolean(itemUsable(BurstPotionID), COLOR.STATUS_BOOLEAN.HEALING_POTION_USABLE, COLOR.BLACK)
     end
 
     -- 说明：更新近战范围内的敌人数量。

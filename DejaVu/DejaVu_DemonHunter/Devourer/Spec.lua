@@ -25,7 +25,11 @@ if currentSpec ~= 3 then return end -- 不是噬灭专精则停止
 -- DejaVu Core
 local DejaVu = _G["DejaVu"]
 local Cell = DejaVu.Cell
+local Config = DejaVu.Config
 local MartixInitFuncs = DejaVu.MartixInitFuncs
+
+-- 躺平模式配置
+local lying_flat_mode = Config("lying_flat_mode")
 
 -- 虚空变形 buff ID
 local VOID_ERUPTION_BUFF_ID = 1217607
@@ -67,21 +71,27 @@ local function InitFrame()
         end
     end)
 
-    -- 爆发计时：监听虚空变形 buff，开启/关闭爆发计时
-    -- buff 没有持续时间，需要自己计时
+    -- 注册事件
     eventFrame:RegisterUnitEvent("UNIT_AURA", "player")
+    eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+
+    -- 统一事件处理函数
     eventFrame:SetScript("OnEvent", function(self, event, unit)
-        local auraData = GetPlayerAuraBySpellID(VOID_ERUPTION_BUFF_ID)
-        if auraData then
-            -- buff 存在：记录起始时间，开启爆发计时
-            if voidEruptionStartTime == 0 then
-                voidEruptionStartTime = GetTime()
+        if event == "UNIT_AURA" then
+            -- 爆发计时：监听虚空变形 buff
+            local auraData = GetPlayerAuraBySpellID(VOID_ERUPTION_BUFF_ID)
+            if auraData then
+                if voidEruptionStartTime == 0 then
+                    voidEruptionStartTime = GetTime()
+                end
+                DejaVu.BurstTime = voidEruptionStartTime
+            else
+                voidEruptionStartTime = 0
+                DejaVu.BurstTime = 0
             end
-            DejaVu.BurstTime = voidEruptionStartTime  -- 存储起始时间
-        else
-            -- buff 消失：关闭爆发计时，重置起始时间
-            voidEruptionStartTime = 0
-            DejaVu.BurstTime = 0
+        elseif event == "PLAYER_REGEN_ENABLED" then
+            -- 脱战时自动重置躺平模式为关闭
+            lying_flat_mode:set_value(false)
         end
     end)
 end
