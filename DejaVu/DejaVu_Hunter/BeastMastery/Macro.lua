@@ -30,6 +30,7 @@ insert(macroList, { title = "target反制射击", key = "ALT-NUMPAD9", text = "/
 insert(macroList, { title = "focus反制射击", key = "ALT-NUMPAD0", text = "/cast [@focus] 反制射击" })
 insert(macroList, { title = "target眼镜蛇射击", key = "SHIFT-NUMPAD1", text = "/cast [@target] 眼镜蛇射击" })
 insert(macroList, { title = "focus宁神射击", key = "SHIFT-NUMPAD2", text = "/cast [@focus] 宁神射击" })
+insert(macroList, { title = "target倒刺射击", key = "SHIFT-NUMPAD3", text = "/cast [@target] 倒刺射击" })
 
 for macroIndex, macro in pairs(macroList) do -- luacheck: ignore macroIndex
     local buttonName = addonName .. "Button" .. macro.title

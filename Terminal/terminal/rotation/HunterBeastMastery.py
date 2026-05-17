@@ -24,6 +24,7 @@ class HunterBeastMastery(BaseRotation):
             "focus反制射击": "ALT-NUMPAD0",
             "target眼镜蛇射击": "SHIFT-NUMPAD1",
             "focus宁神射击": "SHIFT-NUMPAD2",
+            "target倒刺射击": "SHIFT-NUMPAD3",
         }
 
     def _needs_interrupt(
@@ -110,5 +111,7 @@ class HunterBeastMastery(BaseRotation):
                 return self.cast("target宁神射击")
             if ctx.assisted_combat == "眼镜蛇射击":
                 return self.cast("target眼镜蛇射击")
+            if ctx.assisted_combat == "倒刺射击":
+                return self.cast("target倒刺射击")
 
         return self.idle("当前没有合适动作")
