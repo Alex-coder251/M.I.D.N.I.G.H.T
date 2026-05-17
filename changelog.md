@@ -26,3 +26,16 @@ Verification:
 - `py -3 C:\Users\liantian\.codex\skills\.system\skill-creator\scripts\quick_validate.py .agents\skills\dejavu-coder` -> `Skill is valid!`
 - `git status --short` -> only expected additions before final commit: `?? .agents/` and `?? changelog.md`
 - Forward-test -> compared a baseline subagent response against a `$dejavu-coder`-guided subagent response; the skill-guided run added `.context` loading, `secret values` handling, DejaVu scope control, and `luacheck`/commit workflow guidance
+
+## 2026-05-17
+
+### Add DejaVu Beast Mastery Hunter plugin
+
+- Added `DejaVu_Hunter` as a load-on-demand DejaVu class plugin and wired hunter loading through `DejaVu_Loader`.
+- Added Beast Mastery files for global range defaults, focus/frenzy display cells, cooldown spell registration, interrupt-mode config display, and a minimal reload macro binding.
+- Added `UnitPowerMax` to the DejaVu luacheck read globals for the hunter focus display path.
+
+Verification:
+
+- `luacheck DejaVu_Common DejaVu_Core DejaVu_Matrix DejaVu_Panel DejaVu_Player DejaVu_Party DejaVu_Enemy DejaVu_Spell DejaVu_Aura DejaVu_DeathKnight DejaVu_DemonHunter DejaVu_Druid DejaVu_Priest DejaVu_Hunter` -> not run: `luacheck` is not installed or not in PATH in this environment
+- `git diff --check` -> no whitespace errors

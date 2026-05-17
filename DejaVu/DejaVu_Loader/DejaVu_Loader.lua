@@ -1,4 +1,4 @@
-local addonName, addonTable = ... -- 插件入口固定写法
+local addonName, addonTable = ... -- luacheck: ignore addonTable
 local LoadAddOn = C_AddOns.LoadAddOn
 local DejaVu = _G["DejaVu"]
 local logging = DejaVu.Logging
@@ -13,7 +13,7 @@ LoadAddOn("DejaVu_Enemy")
 LoadAddOn("DejaVu_Party")
 LoadAddOn("DejaVu_Common")
 
-local className, classFilename, classId = UnitClass("player")
+local className, classFilename, classId = UnitClass("player") -- luacheck: ignore className classId
 
 if classFilename == "DEATHKNIGHT" then
     LoadAddOn("DejaVu_DeathKnight")
@@ -23,4 +23,6 @@ elseif classFilename == "PRIEST" then
     LoadAddOn("DejaVu_Priest")
 elseif classFilename == "DEMONHUNTER" then
     LoadAddOn("DejaVu_DemonHunter")
+elseif classFilename == "HUNTER" then
+    LoadAddOn("DejaVu_Hunter")
 end

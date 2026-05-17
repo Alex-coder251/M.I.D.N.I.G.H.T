@@ -55,6 +55,7 @@ read_globals = {
     "UnitIsEnemy",
     "UnitIsUnit",
     "UnitPower",
+    "UnitPowerMax",
     "UnitPowerPercent",
     "UnitPowerType",
     "wipe",
