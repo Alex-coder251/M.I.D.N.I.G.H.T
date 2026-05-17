@@ -30,6 +30,7 @@ local MartixInitFuncs = DejaVu.MartixInitFuncs
 
 -- 躺平模式配置
 local lying_flat_mode = Config("lying_flat_mode")
+local use_burst_potion = Config("use_burst_potion")
 
 -- 虚空变形 buff ID
 local VOID_ERUPTION_BUFF_ID = 1217607
@@ -92,6 +93,7 @@ local function InitFrame()
         elseif event == "PLAYER_REGEN_ENABLED" then
             -- 脱战时自动重置躺平模式为关闭
             lying_flat_mode:set_value(false)
+            use_burst_potion:set_value(false)
         end
     end)
 end

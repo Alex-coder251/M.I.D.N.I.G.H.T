@@ -2,6 +2,16 @@
 
 ## 2026-05-17
 
+### Reset Devourer burst potion toggle out of combat
+
+- Reset Devourer Demon Hunter `use_burst_potion` to off on `PLAYER_REGEN_ENABLED`, matching the existing lying-flat mode reset behavior.
+
+Verification:
+
+- `luacheck DejaVu_DemonHunter` -> 0 errors; 6 pre-existing whitespace warnings in Devourer/Vengeance `Spec.lua`
+
+## 2026-05-17
+
 ### Default Demon Hunter burst potion toggle off
 
 - Changed Devourer Demon Hunter `使用爆发药` to default off in DejaVu.
