@@ -98,6 +98,14 @@ class DemonHunterDevourer(BaseRotation):
         )
 
         # 开启保命血量阈值（默认60%）
+        # 爆发药开关（turn_on / turn_off），默认开启以保持原有行为
+        use_burst_potion_cell = ctx.setting.cell(6)
+        use_burst_potion = (
+            "turn_on"
+            if use_burst_potion_cell is None or use_burst_potion_cell.mean >= 200
+            else "turn_off"
+        )
+
         dh_health_threshold_cell = ctx.setting.cell(2)
         dh_health_threshold = (
             60
@@ -332,6 +340,7 @@ class DemonHunterDevourer(BaseRotation):
             # 虚空变形后紧接着使用"鲁莽药水"
             if (
                 latest_succeeded_cast == "虚空变形"
+                and use_burst_potion == "turn_on"
                 and player.burstPotionCooldownUsable
                 and ctx.gcd_ready(spell_queue_window)
                 and player.enemyCount >= 6

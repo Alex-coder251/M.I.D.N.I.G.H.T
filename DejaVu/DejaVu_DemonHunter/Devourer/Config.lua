@@ -62,6 +62,43 @@ end
 
 -- 2. 打断模式配置
 do
+    local use_burst_potion = Config("use_burst_potion")
+    insert(ConfigRows, {
+        type = "checkbox",
+        key = "use_burst_potion",
+        name = "使用爆发药",
+        tooltip = "开启后允许爆发阶段使用鲁莽药水",
+        default_value = true,
+        on_text = "开",
+        off_text = "关",
+        bind_config = use_burst_potion,
+    })
+
+    local function InitFrame()
+        -- x:61 y:12
+        -- 用途：显示噬灭恶魔猎手爆发药使用开关配置。
+        -- 更新函数：set_use_burst_potion
+        local use_burst_potion_cell = Cell:New(61, 12)
+
+        -- 说明：根据爆发药开关配置更新显示强度。
+        -- 依赖事件更新：无
+        -- 依赖定时刷新：无
+        local function set_use_burst_potion(value)
+            if value then
+                use_burst_potion_cell:setCellRGBA(255 / 255)
+            else
+                use_burst_potion_cell:setCellRGBA(127 / 255)
+            end
+        end
+
+        use_burst_potion:register_callback(set_use_burst_potion)
+
+        set_use_burst_potion(use_burst_potion:get_value())
+    end
+    insert(MartixInitFuncs, InitFrame)
+end
+
+do
     local dh_interrupt_mode = Config("dh_interrupt_mode")
     insert(ConfigRows, {
         type = "combo",

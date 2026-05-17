@@ -2,6 +2,19 @@
 
 ## 2026-05-17
 
+### Add Demon Hunter burst potion toggle
+
+- Added a Devourer Demon Hunter `使用爆发药` checkbox, mirrored through setting cell `x=61,y=12` / `ctx.setting.cell(6)`.
+- Wired the Terminal Devourer rotation so closing the toggle skips the automatic `鲁莽药水` cast after `虚空变形`; the default remains enabled.
+
+Verification:
+
+- `uv run python -m py_compile terminal/rotation/DemonHunterDevourer.py` -> passed with escalated cache access
+- `git diff --check` -> no whitespace errors
+- `luacheck DejaVu_DemonHunter` -> not run: `luacheck` is not installed or not in PATH in this environment
+
+## 2026-05-17
+
 ### Expand DejaVu checkbox click area
 
 - Updated DejaVu panel checkbox rows so the whole rectangular control, including the on/off status text, toggles the bound setting.
