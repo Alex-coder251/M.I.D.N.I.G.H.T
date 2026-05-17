@@ -97,12 +97,12 @@ class DemonHunterDevourer(BaseRotation):
         )
 
         # 开启保命血量阈值（默认60%）
-        # 爆发药开关（turn_on / turn_off），默认开启以保持原有行为
+        # 爆发药开关（turn_on / turn_off），默认关闭
         use_burst_potion_cell = ctx.setting.cell(6)
         use_burst_potion = (
-            "turn_on"
-            if use_burst_potion_cell is None or use_burst_potion_cell.mean >= 200
-            else "turn_off"
+            "turn_off"
+            if use_burst_potion_cell is None or use_burst_potion_cell.mean < 200
+            else "turn_on"
         )
 
         dh_health_threshold_cell = ctx.setting.cell(2)

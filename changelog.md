@@ -2,6 +2,18 @@
 
 ## 2026-05-17
 
+### Default Demon Hunter burst potion toggle off
+
+- Changed Devourer Demon Hunter `使用爆发药` to default off in DejaVu.
+- Updated Terminal decoding so a missing or dim setting cell also means the burst potion toggle is off.
+
+Verification:
+
+- `uv run python -m py_compile terminal/rotation/DemonHunterDevourer.py` -> passed with escalated cache access
+- `luacheck DejaVu_DemonHunter` -> 0 errors; 6 pre-existing whitespace warnings in Devourer/Vengeance `Spec.lua`
+
+## 2026-05-17
+
 ### Add Demon Hunter burst potion toggle
 
 - Added a Devourer Demon Hunter `使用爆发药` checkbox, mirrored through setting cell `x=61,y=12` / `ctx.setting.cell(6)`.

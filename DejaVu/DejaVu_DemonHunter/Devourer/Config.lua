@@ -68,7 +68,7 @@ do
         key = "use_burst_potion",
         name = "使用爆发药",
         tooltip = "开启后允许爆发阶段使用鲁莽药水",
-        default_value = true,
+        default_value = false,
         on_text = "开",
         off_text = "关",
         bind_config = use_burst_potion,
