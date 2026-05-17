@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from terminal.context import Context, Unit
 from .base import BaseRotation
@@ -12,18 +12,18 @@ class HunterBeastMastery(BaseRotation):
         super().__init__()
 
         self.macroTable = {
-            "璇": "ALT-NUMPAD1",
-            "鍙敜瀹犵墿": "ALT-NUMPAD2",
-            "澶嶆椿瀹犵墿": "ALT-NUMPAD3",
-            "target鏉€鎴懡浠?": "ALT-NUMPAD4",
-            "target鐙傞噹鎬掔伀": "ALT-NUMPAD5",
-            "target鐙傞噹闉瑸": "ALT-NUMPAD6",
-            "target鐚庝汉鍗拌": "ALT-NUMPAD7",
-            "target瀹佺灏勫嚮": "ALT-NUMPAD8",
-            "target鍙嶅埗灏勫嚮": "ALT-NUMPAD9",
-            "focus鍙嶅埗灏勫嚮": "ALT-NUMPAD0",
-            "target鐪奸暅铔囧皠鍑?": "SHIFT-NUMPAD1",
-            "focus瀹佺灏勫嚮": "SHIFT-NUMPAD2",
+            "误导": "ALT-NUMPAD1",
+            "召唤宠物": "ALT-NUMPAD2",
+            "复活宠物": "ALT-NUMPAD3",
+            "target杀戮命令": "ALT-NUMPAD4",
+            "target狂野怒火": "ALT-NUMPAD5",
+            "target狂野鞭笞": "ALT-NUMPAD6",
+            "target猎人印记": "ALT-NUMPAD7",
+            "target宁神射击": "ALT-NUMPAD8",
+            "target反制射击": "ALT-NUMPAD9",
+            "focus反制射击": "ALT-NUMPAD0",
+            "target眼镜蛇射击": "SHIFT-NUMPAD1",
+            "focus宁神射击": "SHIFT-NUMPAD2",
         }
 
     def _needs_interrupt(
@@ -75,7 +75,7 @@ class HunterBeastMastery(BaseRotation):
         if player.isEmpowering:
             return self.idle("正在蓄力")
 
-        if player.hasBuff("椋熺墿鍜岄ギ鏂?"):
+        if player.hasBuff("食物和饮料"):
             return self.idle("正在吃喝")
 
         if not player.isInCombat:
@@ -83,32 +83,32 @@ class HunterBeastMastery(BaseRotation):
 
         focus_need_interrupt = self._needs_interrupt(focus, ctx.interrupt_blacklist)
         target_need_interrupt = self._needs_interrupt(target, ctx.interrupt_blacklist)
-        if ctx.spell_cooldown_ready("鍙嶅埗灏勫嚮", spell_queue_window, ignore_gcd=True):
+        if ctx.spell_cooldown_ready("反制射击", spell_queue_window, ignore_gcd=True):
             if focus_need_interrupt:
-                return self.cast("focus鍙嶅埗灏勫嚮")
+                return self.cast("focus反制射击")
             if target_need_interrupt:
-                return self.cast("target鍙嶅埗灏勫嚮")
+                return self.cast("target反制射击")
 
         focus_need_dispel = self._needs_enemy_dispel(focus, ctx.dispel_blacklist)
         target_need_dispel = self._needs_enemy_dispel(target, ctx.dispel_blacklist)
-        if ctx.spell_cooldown_ready("瀹佺灏勫嚮", spell_queue_window, ignore_gcd=True):
+        if ctx.spell_cooldown_ready("宁神射击", spell_queue_window, ignore_gcd=True):
             if focus_need_dispel:
-                return self.cast("focus瀹佺灏勫嚮")
+                return self.cast("focus宁神射击")
             if target_need_dispel:
-                return self.cast("target瀹佺灏勫嚮")
+                return self.cast("target宁神射击")
 
         if target.exists and target.canAttack and target.isInCombat:
-            if ctx.assisted_combat == "鏉€鎴懡浠?":
-                return self.cast("target鏉€鎴懡浠?")
-            if ctx.assisted_combat == "鐙傞噹鎬掔伀":
-                return self.cast("target鐙傞噹鎬掔伀")
-            if ctx.assisted_combat == "鐙傞噹闉瑸":
-                return self.cast("target鐙傞噹闉瑸")
-            if ctx.assisted_combat == "鐚庝汉鍗拌":
-                return self.cast("target鐚庝汉鍗拌")
-            if ctx.assisted_combat == "瀹佺灏勫嚮":
-                return self.cast("target瀹佺灏勫嚮")
-            if ctx.assisted_combat == "鐪奸暅铔囧皠鍑?":
-                return self.cast("target鐪奸暅铔囧皠鍑?")
+            if ctx.assisted_combat == "杀戮命令":
+                return self.cast("target杀戮命令")
+            if ctx.assisted_combat == "狂野怒火":
+                return self.cast("target狂野怒火")
+            if ctx.assisted_combat == "狂野鞭笞":
+                return self.cast("target狂野鞭笞")
+            if ctx.assisted_combat == "猎人印记":
+                return self.cast("target猎人印记")
+            if ctx.assisted_combat == "宁神射击":
+                return self.cast("target宁神射击")
+            if ctx.assisted_combat == "眼镜蛇射击":
+                return self.cast("target眼镜蛇射击")
 
         return self.idle("当前没有合适动作")

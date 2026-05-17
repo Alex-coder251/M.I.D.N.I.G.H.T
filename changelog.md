@@ -2,6 +2,20 @@
 
 ## 2026-05-17
 
+### Fix Beast Mastery Hunter Chinese spell names
+
+- Replaced mojibake spell names in Beast Mastery Hunter `Macro.lua`, `Spell.lua`, and Terminal `HunterBeastMastery.py` with real Chinese spell names.
+- Kept macro titles, DejaVu cooldown spell names, and Terminal rotation checks aligned for Counter Shot, Tranquilizing Shot, and assisted-combat output.
+
+Verification:
+
+- `uv run python -m py_compile terminal\rotation\HunterBeastMastery.py` -> passed with escalated cache access
+- `git diff --check` -> no whitespace errors
+- `rg "鍙|鏉|鐙|瀹|閸|鐎|閻|妞|鎬|寤|姝|楠|褰" DejaVu/DejaVu_Hunter/BeastMastery Terminal/terminal/rotation/HunterBeastMastery.py` -> no matches
+- `luacheck DejaVu_Hunter` -> not run: `luacheck` is not installed or not in PATH in this environment
+
+## 2026-05-17
+
 ### Add Beast Mastery Hunter Terminal rotation
 
 - Added a Terminal Beast Mastery Hunter rotation that handles Counter Shot interrupts, Tranquilizing Shot enemy dispels, and target output through the in-game assisted-combat recommendation.

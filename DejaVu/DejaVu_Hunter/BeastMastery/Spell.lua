@@ -1,4 +1,4 @@
-local addonName, addonTable             = ... -- luacheck: ignore addonTable
+﻿local addonName, addonTable             = ... -- luacheck: ignore addonTable
 
 local insert                            = table.insert
 
@@ -28,4 +28,3 @@ insert(cooldownSpells, { spellID = 34477, name = "误导" })
 insert(cooldownSpells, { spellID = 19801, name = "宁神射击" })
 insert(cooldownSpells, { spellID = 883, name = "召唤宠物" })
 insert(cooldownSpells, { spellID = 982, name = "复活宠物" })
-
