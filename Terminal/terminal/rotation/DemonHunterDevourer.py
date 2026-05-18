@@ -207,12 +207,14 @@ class DemonHunterDevourer(BaseRotation):
             ):
                 return self.cast("灵魂献祭")
 
-            # 2. 治疗石
-            if player.healthstoneCooldownUsable:
+            # 2. 治疗石player.healthstoneCooldownUsable
+            if ctx.spell_cooldown_ready("治疗石", spell_queue_window, ignore_gcd=True):
                 return self.cast("治疗石")
 
-            # 3. 强效治疗药水
-            if player.healingPotionCooldownUsable:
+            # 3. 强效治疗药水player.healingPotionCooldownUsable
+            if ctx.spell_cooldown_ready(
+                "强效治疗药水", spell_queue_window, ignore_gcd=True
+            ):
                 return self.cast("强效治疗药水")
 
         # ── 打断逻辑 ────────────────────────────────────────────────
@@ -342,17 +344,17 @@ class DemonHunterDevourer(BaseRotation):
                 lying_flat_mode == "turn_off"
                 and latest_succeeded_cast == "虚空变形"
                 and use_burst_potion == "turn_on"
-                and player.burstPotionCooldownUsable
-                and ctx.gcd_ready(spell_queue_window)
+                # and player.burstPotionCooldownUsable
+                # and ctx.gcd_ready(spell_queue_window)
+                and ctx.spell_cooldown_ready("鲁莽药水", spell_queue_window)
             ):
                 return self.cast("鲁莽药水")
 
-            print(
-                f"威厄高尔的最终凝视: {ctx.spell_cooldown_ready("威厄高尔的最终凝视", spell_queue_window)}"
-            )
             if (
                 lying_flat_mode == "turn_off"
-                and ctx.spell_cooldown_ready("威厄高尔的最终凝视", spell_queue_window)
+                and ctx.spell_cooldown_ready(
+                    "威厄高尔的最终凝视", spell_queue_window, ignore_gcd=True
+                )
                 and soul_fragments >= 30
             ):
                 return self.cast("威厄高尔的最终凝视")
@@ -426,11 +428,17 @@ class DemonHunterDevourer(BaseRotation):
                         star_soul_condition or star_fury_emergency
                     )
 
-                # 变身后30秒根除就绪判断：虚空射线好了 且 有噬欲时刻
+                # # 变身后30秒根除就绪判断：虚空射线好了 且 有噬欲时刻
+                # eradication_ready_late = (
+                #     ctx.spell_cooldown_ready("根除", spell_queue_window)
+                #     and moment_of_craving_exists
+                #     and void_ray_ready
+                # )
+                # 变身后30秒根除就绪判断：恶魔之怒<60+身上>=30时强制使用
                 eradication_ready_late = (
-                    ctx.spell_cooldown_ready("根除", spell_queue_window)
-                    and moment_of_craving_exists
-                    and void_ray_ready
+                    fury < 60
+                    and scattered_souls_fragments_count + soul_fragments >= 30
+                    and ctx.spell_cooldown_ready("根除", spell_queue_window)
                 )
 
                 if not is_aoe:
@@ -438,12 +446,15 @@ class DemonHunterDevourer(BaseRotation):
                     if eradication_ready_late:
                         return self.cast("target根除")
 
-                    # 根除后立即接虚空射线
-                    if latest_succeeded_cast == "根除" and void_ray_ready:
-                        return self.cast("虚空射线")
+                    # # 根除后立即接虚空射线
+                    # if latest_succeeded_cast == "根除" and void_ray_ready:
+                    #     return self.cast("虚空射线")
 
                     if star_ready_late:
                         return self.cast("target坍缩之星")
+
+                    if void_ray_ready:
+                        return self.cast("虚空射线")
 
                     if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
                         if main_target is focus:
