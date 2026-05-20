@@ -19,5 +19,5 @@ if currentSpec ~= 3 then return end -- 不是噬灭专精则停止
 -- DejaVu Core
 local DejaVu = _G["DejaVu"]
 DejaVu.RangedRange = 40 -- 默认的远程检测范围
-DejaVu.MeleeRange = 25   -- 默认的近战检测范围
+DejaVu.MeleeRange = 30   -- 默认的近战检测范围
 DejaVu.BurstPotionID = 241289   -- 噬灭爆发药水

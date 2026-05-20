@@ -166,14 +166,14 @@ class DemonHunterDevourer(BaseRotation):
 
         # ── 主目标确定 ──────────────────────────────────────────────
 
-        main_target = None
+        main_enemy = None
         if focus.exists and focus.canAttack and focus.isInRangedRange:
-            main_target = focus
+            main_enemy = focus
         elif target.exists and target.canAttack and target.isInRangedRange:
-            main_target = target
+            main_enemy = target
 
-        # if main_target is None:
-        #     return self.idle("没有合适的目标")
+        if main_enemy is None:
+            return self.idle("没有合适的目标")
 
         # ── AOE判断 ─────────────────────────────────────────────────
         is_aoe = player.enemyCount >= aoe_enemy_count
@@ -310,9 +310,9 @@ class DemonHunterDevourer(BaseRotation):
                     return self.cast("虚空射线")
 
                 if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                    if main_target is focus:
+                    if main_enemy is focus:
                         return self.cast("focus吞噬")
-                    elif main_target is target:
+                    elif main_enemy is target:
                         return self.cast("target吞噬")
                     elif player.enemyCount >= 1:
                         return self.cast("就近吞噬")
@@ -341,10 +341,7 @@ class DemonHunterDevourer(BaseRotation):
             eradication_craving_ready = (
                 moment_of_craving_exists
                 and scattered_souls_fragments_count >= 10
-                and (
-                    (latest_succeeded_cast == "坍缩之星")
-                    or (20 <= soul_fragments and fury <= 50)
-                )
+                and ((latest_succeeded_cast == "坍缩之星") or (20 <= soul_fragments))
                 and ctx.spell_cooldown_ready("根除", spell_queue_window)
             )  # 坍缩之后秒根除可以强行打断根除的前摇，打坍缩后秒接根除收益最好
 
@@ -386,9 +383,9 @@ class DemonHunterDevourer(BaseRotation):
 
                     # 4. 吞噬
                     if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                        if main_target is focus:
+                        if main_enemy is focus:
                             return self.cast("focus吞噬")
-                        elif main_target is target:
+                        elif main_enemy is target:
                             return self.cast("target吞噬")
                         elif player.enemyCount >= 1:
                             return self.cast("就近吞噬")
@@ -408,13 +405,16 @@ class DemonHunterDevourer(BaseRotation):
                         return self.cast("虚空射线")
 
                     # 4. 吞噬
+                    # if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
+                    #     if main_enemy is focus:
+                    #         return self.cast("focus吞噬")
+                    #     elif main_enemy is target:
+                    #         return self.cast("target吞噬")
+                    #     elif player.enemyCount >= 1:
+                    #         return self.cast("就近吞噬")
                     if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                        if main_target is focus:
-                            return self.cast("focus吞噬")
-                        elif main_target is target:
-                            return self.cast("target吞噬")
-                        elif player.enemyCount >= 1:
-                            return self.cast("就近吞噬")
+                        if main_enemy is not None:
+                            return self.cast("{main_enemy.unitToken}吞噬")
 
             # ── 变身后30秒：根除（触发虚空射线连打） > 坍缩之星 > 虚空射线 > 吞噬
             else:
@@ -473,9 +473,9 @@ class DemonHunterDevourer(BaseRotation):
                         return self.cast("虚空射线")
 
                     if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                        if main_target is focus:
+                        if main_enemy is focus:
                             return self.cast("focus吞噬")
-                        elif main_target is target:
+                        elif main_enemy is target:
                             return self.cast("target吞噬")
                         elif player.enemyCount >= 1:
                             return self.cast("就近吞噬")
@@ -491,9 +491,9 @@ class DemonHunterDevourer(BaseRotation):
                         return self.cast("虚空射线")
 
                     if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                        if main_target is focus:
+                        if main_enemy is focus:
                             return self.cast("focus吞噬")
-                        elif main_target is target:
+                        elif main_enemy is target:
                             return self.cast("target吞噬")
                         elif player.enemyCount >= 1:
                             return self.cast("就近吞噬")
@@ -530,7 +530,7 @@ class DemonHunterDevourer(BaseRotation):
         if (
             lying_flat_mode == "turn_off"
             and ctx.spell_cooldown_ready("虚空变形", spell_queue_window)
-            and main_target.healthPercent > reaper_health_threshold
+            and main_enemy.healthPercent > reaper_health_threshold
             and not player.isMoving
         ):
             return self.cast("虚空变形")
@@ -562,9 +562,9 @@ class DemonHunterDevourer(BaseRotation):
 
         # ── 6. 吞噬：主要填充技能 ────────────────────────────────────
         if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-            if main_target is focus:
+            if main_enemy is focus:
                 return self.cast("focus吞噬")
-            elif main_target is target:
+            elif main_enemy is target:
                 return self.cast("target吞噬")
             elif player.enemyCount >= 1:
                 return self.cast("就近吞噬")
