@@ -209,13 +209,11 @@ class DemonHunterDevourer(BaseRotation):
                 return self.cast("灵魂献祭")
 
             # 2. 治疗石player.healthstoneCooldownUsable
-            if ctx.spell_cooldown_ready("治疗石", spell_queue_window, ignore_gcd=True):
+            if ctx.spell_cooldown_ready("治疗石", spell_queue_window):
                 return self.cast("治疗石")
 
             # 3. 强效治疗药水player.healingPotionCooldownUsable
-            if ctx.spell_cooldown_ready(
-                "强效治疗药水", spell_queue_window, ignore_gcd=True
-            ):
+            if ctx.spell_cooldown_ready("强效治疗药水", spell_queue_window):
                 return self.cast("强效治疗药水")
 
         # ── 打断逻辑 ────────────────────────────────────────────────
@@ -338,7 +336,7 @@ class DemonHunterDevourer(BaseRotation):
                     or (20 <= soul_fragments and fury <= 50)
                 )
                 and ctx.spell_cooldown_ready("根除", spell_queue_window)
-            )  # 坍缩之后秒根除可以强行打断根除的前摇，食欲时刻剩3-2秒的时候打坍缩后秒接根除收益最好
+            )  # 坍缩之后秒根除可以强行打断根除的前摇，打坍缩后秒接根除收益最好
 
             # 虚空变形后紧接着使用"鲁莽药水"
             if (
@@ -429,16 +427,11 @@ class DemonHunterDevourer(BaseRotation):
                         star_soul_condition or star_fury_emergency
                     )
 
-                # # 变身后30秒根除就绪判断：虚空射线好了 且 有噬欲时刻
-                # eradication_ready_late = (
-                #     ctx.spell_cooldown_ready("根除", spell_queue_window)
-                #     and moment_of_craving_exists
-                #     and void_ray_ready
-                # )
                 # 变身后30秒根除就绪判断：恶魔之怒<60+身上>=30时强制使用
                 eradication_ready_late = (
                     fury < 60
                     and scattered_souls_fragments_count + soul_fragments >= 30
+                    and moment_of_craving_exists
                     and ctx.spell_cooldown_ready("根除", spell_queue_window)
                 )
 
@@ -446,10 +439,6 @@ class DemonHunterDevourer(BaseRotation):
                     # 单体：先根除再虚空射线 > 坍缩之星 > 吞噬
                     if eradication_ready_late:
                         return self.cast("target根除")
-
-                    # # 根除后立即接虚空射线
-                    # if latest_succeeded_cast == "根除" and void_ray_ready:
-                    #     return self.cast("虚空射线")
 
                     if star_ready_late:
                         return self.cast("target坍缩之星")
