@@ -462,12 +462,6 @@ class DemonHunterDevourer(BaseRotation):
             if single_target_feast_eradication_ready:
                 return self.cast("target根除")
 
-            if single_target_feast_opener and feast_stacks >= 15:
-                return self.idle("单体盛宴进变身：等待坍缩之星")
-
-            if single_target_feast_opener and feast_stacks < 15 and ground_souls_full:
-                return self.idle("单体盛宴进变身：等待根除")
-
             if self._burst_star_count < 3 and void_ray_ready:
                 return self.cast("虚空射线")
 
