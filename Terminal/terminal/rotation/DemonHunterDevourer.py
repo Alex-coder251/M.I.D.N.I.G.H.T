@@ -305,6 +305,12 @@ class DemonHunterDevourer(BaseRotation):
             and ctx.spell_cooldown_ready("虚空射线", spell_queue_window)
         )
         eradication_ready = ctx.spell_cooldown_ready("根除", spell_queue_window)
+        feast_exists = feast_remaining > 0 or feast_stacks > 0
+        feast_eradication_ready = (
+            eradication_ready
+            and feast_exists
+            and ground_souls_full
+        )
         immolation_ready = (
             not soul_immolation_exists
             and ctx.spell_cooldown_ready("灵魂献祭", spell_queue_window)
@@ -347,12 +353,10 @@ class DemonHunterDevourer(BaseRotation):
             can_aim_fifth_star = ground_souls_full or burst_time <= 40
             high_quality_star = is_aoe or feast_stacks >= 20 or ground_souls_full
             feast_ending_soon = feast_remaining > 0 and feast_remaining <= 1.5
-            eradication_can_collect = ground_souls_full
             # 怒气低只表示变身收尾压力变高，不表示坍缩之星需要怒气。
             fifth_star_time_pressure = fury < 55
             delayed_buffed_eradication = (
-                eradication_ready
-                and eradication_can_collect
+                feast_eradication_ready
                 and (
                     body_souls_safe_for_eradication
                     or feast_ending_soon
@@ -462,14 +466,14 @@ class DemonHunterDevourer(BaseRotation):
         if immolation_ready:
             return self.cast("灵魂献祭")
 
+        if feast_eradication_ready:
+            return self.cast("target根除")
+
         if void_ray_ready:
             return self.cast("虚空射线")
 
-        if eradication_ready and ground_souls_full:
-            return self.cast("target根除")
-
         if voidfall_count >= 3:
-            if eradication_ready and ground_souls_full:
+            if feast_eradication_ready:
                 return self.cast("target根除")
             if ctx.spell_cooldown_ready("收割", spell_queue_window):
                 return self.cast("target收割")
