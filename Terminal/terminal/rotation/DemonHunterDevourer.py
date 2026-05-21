@@ -315,7 +315,7 @@ class DemonHunterDevourer(BaseRotation):
         devour_ready = ctx.spell_cooldown_ready("吞噬", spell_queue_window)
 
         # ══════════════════════════════════════════════════════════════
-        # 爆发段：前三星眼棱优先，带 buff 的根除滞后，第四星后按献祭轴处理。
+        # 爆发段：前三星虚空射线优先，带 buff 的根除滞后，第四星后按献祭轴处理。
         # ══════════════════════════════════════════════════════════════
         if collapsing_star_exists:
 
@@ -351,19 +351,24 @@ class DemonHunterDevourer(BaseRotation):
             high_quality_star = is_aoe or feast_stacks >= 20 or ground_souls_full
             feast_ending_soon = feast_remaining > 0 and feast_remaining <= 1.5
             eradication_can_collect = ground_souls_full and body_souls_safe_for_eradication
+            # 怒气低只表示变身收尾压力变高，不表示坍缩之星需要怒气。
+            fifth_star_time_pressure = fury < 55
             delayed_buffed_eradication = (
                 eradication_ready
                 and eradication_can_collect
                 and (feast_ending_soon or latest_succeeded_cast == "坍缩之星")
             )
             fifth_star_ready = star_ready and can_aim_fifth_star and (
-                is_aoe or ground_souls_full or body_souls_high or fury < 55
+                is_aoe
+                or ground_souls_full
+                or body_souls_high
+                or fifth_star_time_pressure
             )
             fifth_star_window = post_fourth_star and can_aim_fifth_star and (
                 latest_succeeded_cast in {"根除", "威厄高尔的最终凝视"}
                 or ground_souls_full
                 or body_souls_high
-                or fury < 55
+                or fifth_star_time_pressure
             )
             normal_star_ready = star_ready and (
                 is_aoe
@@ -398,7 +403,7 @@ class DemonHunterDevourer(BaseRotation):
             ):
                 return self.cast("威厄高尔的最终凝视")
 
-            # 第四颗星后：献祭 -> 多扣吞噬 -> 半怒眼棱回怒 -> 根除接星。
+            # 第四颗星后：献祭 -> 多扣吞噬 -> 半怒虚空射线回怒 -> 根除接星。
             if post_fourth_star:
                 if fifth_star_ready:
                     return self.cast("target坍缩之星")
@@ -429,7 +434,7 @@ class DemonHunterDevourer(BaseRotation):
                     if cast_result is not None:
                         return cast_result
 
-            # 前三星：眼棱优先，带 buff 的根除滞后，多用吞噬攒魂。
+            # 前三星：虚空射线优先，带 buff 的根除滞后，多用吞噬攒魂。
             if self._burst_star_count < 3 and void_ray_ready:
                 return self.cast("虚空射线")
 
@@ -450,7 +455,7 @@ class DemonHunterDevourer(BaseRotation):
             return self.idle("爆发中：等待CD")
 
         # ══════════════════════════════════════════════════════════════
-        # 常态/暖机：主动献祭 -> 吞噬攒怒 -> 100 怒眼棱 -> 根除，准备进变身。
+        # 常态/暖机：主动献祭 -> 吞噬攒怒 -> 100 怒虚空射线 -> 根除，准备进变身。
         # ══════════════════════════════════════════════════════════════
 
         if immolation_ready:
