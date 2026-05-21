@@ -368,6 +368,11 @@ class DemonHunterDevourer(BaseRotation):
             ):
                 return self.cast("鲁莽药水")
 
+            if latest_succeeded_cast == "威厄高尔的最终凝视":
+                if star_ready:
+                    return self.cast("target坍缩之星")
+                return self.idle("最终凝视后等待坍缩之星")
+
             if (
                 lying_flat_mode == "turn_off"
                 and ctx.spell_cooldown_ready(
