@@ -356,6 +356,16 @@ class DemonHunterDevourer(BaseRotation):
                 and eradication_can_collect
                 and (feast_ending_soon or latest_succeeded_cast == "坍缩之星")
             )
+            fifth_star_ready = star_ready and can_aim_fifth_star and (
+                is_aoe or ground_souls_full or body_souls_high or fury < 55
+            )
+            normal_star_ready = star_ready and (
+                is_aoe
+                or high_quality_star
+                or latest_succeeded_cast == "虚空射线"
+                or not ground_souls_full
+            )
+            gaze_star_ready = fifth_star_ready if post_fourth_star else normal_star_ready
 
             # 虚空变形后紧接着使用"鲁莽药水"
             if (
@@ -378,7 +388,7 @@ class DemonHunterDevourer(BaseRotation):
                 and ctx.spell_cooldown_ready(
                     "威厄高尔的最终凝视", spell_queue_window, ignore_gcd=True
                 )
-                and soul_fragments >= 30
+                and gaze_star_ready
             ):
                 return self.cast("威厄高尔的最终凝视")
 
@@ -407,21 +417,14 @@ class DemonHunterDevourer(BaseRotation):
                 if delayed_buffed_eradication:
                     return self.cast("target根除")
 
-                if star_ready and can_aim_fifth_star and (
-                    is_aoe or ground_souls_full or body_souls_high or fury < 55
-                ):
+                if fifth_star_ready:
                     return self.cast("target坍缩之星")
 
             # 前三星：眼棱优先，带 buff 的根除滞后，多用吞噬攒魂。
             if self._burst_star_count < 3 and void_ray_ready:
                 return self.cast("虚空射线")
 
-            if star_ready and (
-                is_aoe
-                or high_quality_star
-                or latest_succeeded_cast == "虚空射线"
-                or not ground_souls_full
-            ):
+            if normal_star_ready:
                 return self.cast("target坍缩之星")
 
             if delayed_buffed_eradication:
