@@ -16,6 +16,7 @@ class DemonHunterDevourer(BaseRotation):
     def __init__(self) -> None:
         super().__init__()
         self._burst_star_count = 0
+        self._burst_void_ray_count = 0
         self._last_seen_succeeded_cast = ""
 
         self.macroTable = {
@@ -47,7 +48,6 @@ class DemonHunterDevourer(BaseRotation):
         if ctx.delay:
             return self.idle("延迟开关开启")
 
-        is_opener = float(ctx.combat_time) <= 10
         spell_queue_window = float(ctx.spell_queue_window or 0.3)
         player = ctx.player
         target = ctx.target
@@ -178,6 +178,15 @@ class DemonHunterDevourer(BaseRotation):
         # ── AOE判断 ─────────────────────────────────────────────────
         is_aoe = player.enemyCount >= aoe_enemy_count
 
+        def cast_devour() -> tuple[str, float, str] | None:
+            if main_enemy is focus:
+                return self.cast("focus吞噬")
+            if main_enemy is target:
+                return self.cast("target吞噬")
+            if player.enemyCount >= 1:
+                return self.cast("就近吞噬")
+            return None
+
         # ── Buff/状态读取 ───────────────────────────────────────────
 
         # 疾影
@@ -198,10 +207,13 @@ class DemonHunterDevourer(BaseRotation):
 
         if not collapsing_star_exists:
             self._burst_star_count = 0
+            self._burst_void_ray_count = 0
             self._last_seen_succeeded_cast = ""
         elif latest_succeeded_cast != self._last_seen_succeeded_cast:
             if latest_succeeded_cast == "坍缩之星":
                 self._burst_star_count += 1
+            elif latest_succeeded_cast == "虚空射线":
+                self._burst_void_ray_count += 1
             self._last_seen_succeeded_cast = latest_succeeded_cast
 
         # 灵魂献祭
@@ -276,21 +288,34 @@ class DemonHunterDevourer(BaseRotation):
             range_trigger_spell = focus.anyCastIcon
             player_need_specific_spell_stop = True
 
+        can_stand_cast = not player_need_specific_spell_stop and not player.isMoving
+        ground_souls_full = scattered_souls_fragments_count >= 10
+        body_souls_high = soul_fragments >= 36
+        body_souls_safe_for_eradication = soul_fragments <= 30
+        feast_stacks = player.buffStack("灵魂盛宴")
+        feast_remaining = player.buffRemain("灵魂盛宴")
+
+        star_ready = (
+            can_stand_cast
+            and ctx.spell_cooldown_ready("坍缩之星", spell_queue_window)
+        )
+        void_ray_ready = (
+            can_stand_cast
+            and target.isInRangedRange
+            and ctx.spell_cooldown_ready("虚空射线", spell_queue_window)
+        )
+        eradication_ready = (
+            moment_of_craving_exists
+            and ctx.spell_cooldown_ready("根除", spell_queue_window)
+        )
+        immolation_ready = (
+            not soul_immolation_exists
+            and ctx.spell_cooldown_ready("灵魂献祭", spell_queue_window)
+        )
+        devour_ready = ctx.spell_cooldown_ready("吞噬", spell_queue_window)
+
         # ══════════════════════════════════════════════════════════════
-        # 爆发段逻辑（虚空变形内，collapsing_star_exists == True）
-        #
-        # 变身前30秒（burst_time < 30）：
-        #   AOE优先级：坍缩之星 > 根除（噬欲时刻激活 且 地上>=10魂）> 虚空射线 > 吞噬
-        #   单体优先级：虚空射线（最高）> 坍缩之星 > 根除（噬欲时刻激活 且 地上>=10魂）> 吞噬
-        #
-        # 变身后30秒（burst_time >= 30）：
-        #   单体：根除（虚空射线好了+噬欲时刻）> 接虚空射线 > 坍缩之星（地上>=10+身上>=36或怒气<50）> 吞噬
-        #   AOE：坍缩之星 > 根除（虚空射线好了+噬欲时刻）> 虚空射线 > 吞噬
-        #
-        # 躺平模式额外逻辑：
-        #   - 不释放坍缩之星和根除
-        #   - 仅用虚空射线和吞噬堆碎片
-        #   - 身上>=10魂 且 地上>=10魂后停手，等待变身自然结束
+        # 爆发段：前三星眼棱优先，带 buff 的根除滞后，第四星后按献祭轴处理。
         # ══════════════════════════════════════════════════════════════
         if collapsing_star_exists:
 
@@ -310,12 +335,9 @@ class DemonHunterDevourer(BaseRotation):
                     return self.cast("虚空射线")
 
                 if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                    if main_enemy is focus:
-                        return self.cast("focus吞噬")
-                    elif main_enemy is target:
-                        return self.cast("target吞噬")
-                    elif player.enemyCount >= 1:
-                        return self.cast("就近吞噬")
+                    cast_result = cast_devour()
+                    if cast_result is not None:
+                        return cast_result
 
                 return self.idle("躺平模式：爆发中堆碎片，等待CD")
 
@@ -323,27 +345,17 @@ class DemonHunterDevourer(BaseRotation):
 
             # 变身内已持续时间（秒）
             burst_time = float(ctx.burst_time or 0)
-            burst_phase_late = burst_time >= 30  # True = 变身30秒后
-
-            # 预先计算各技能是否就绪
-            star_ready = (
-                not player_need_specific_spell_stop
-                and not player.isMoving
-                # and soul_fragments >= 30
-                and ctx.spell_cooldown_ready("坍缩之星", spell_queue_window)
+            post_fourth_star = self._burst_star_count >= 4
+            late_fury_phase = burst_time >= 35
+            can_aim_fifth_star = ground_souls_full or burst_time <= 40
+            high_quality_star = is_aoe or feast_stacks >= 20 or ground_souls_full
+            feast_ending_soon = feast_remaining > 0 and feast_remaining <= 1.5
+            eradication_can_collect = ground_souls_full and body_souls_safe_for_eradication
+            delayed_buffed_eradication = (
+                eradication_ready
+                and eradication_can_collect
+                and (feast_ending_soon or latest_succeeded_cast == "坍缩之星")
             )
-            void_ray_ready = (
-                not player_need_specific_spell_stop
-                and not player.isMoving
-                and target.isInRangedRange
-                and ctx.spell_cooldown_ready("虚空射线", spell_queue_window)
-            )
-            eradication_craving_ready = (
-                moment_of_craving_exists
-                and scattered_souls_fragments_count >= 10
-                and ((latest_succeeded_cast == "坍缩之星") or (20 <= soul_fragments))
-                and ctx.spell_cooldown_ready("根除", spell_queue_window)
-            )  # 坍缩之后秒根除可以强行打断根除的前摇，打坍缩后秒接根除收益最好
 
             # 虚空变形后紧接着使用"鲁莽药水"
             if (
@@ -365,217 +377,100 @@ class DemonHunterDevourer(BaseRotation):
             ):
                 return self.cast("威厄高尔的最终凝视")
 
-            # ── 变身前30秒：原版逻辑 ─────────────────────────────────────
-            if not burst_phase_late:
-                # 单体：虚空射线（最高优先）> 坍缩之星 > 根除 > 吞噬
-                if not is_aoe:
-                    # 1. 虚空射线（单体最高优先）
-                    if void_ray_ready:
-                        return self.cast("虚空射线")
-
-                    # 2. 坍缩之星
-                    if star_ready:
-                        return self.cast("target坍缩之星")
-
-                    # 3. 根除（噬欲时刻激活 且 地上>=10魂）
-                    if eradication_craving_ready:
-                        return self.cast("target根除")
-
-                    # 4. 吞噬
-                    if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                        if main_enemy is focus:
-                            return self.cast("focus吞噬")
-                        elif main_enemy is target:
-                            return self.cast("target吞噬")
-                        elif player.enemyCount >= 1:
-                            return self.cast("就近吞噬")
-
-                # AOE：坍缩之星 > 根除 > 虚空射线 > 吞噬
-                else:
-                    # 1. 坍缩之星
-                    if star_ready:
-                        return self.cast("target坍缩之星")
-
-                    # 2. 根除（噬欲时刻激活 且 地上>=10魂）
-                    if eradication_craving_ready:
-                        return self.cast("target根除")
-
-                    # 3. 虚空射线
-                    if void_ray_ready:
-                        return self.cast("虚空射线")
-
-                    # 4. 吞噬
-                    # if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                    #     if main_enemy is focus:
-                    #         return self.cast("focus吞噬")
-                    #     elif main_enemy is target:
-                    #         return self.cast("target吞噬")
-                    #     elif player.enemyCount >= 1:
-                    #         return self.cast("就近吞噬")
-                    if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                        if main_enemy is not None:
-                            return self.cast("{main_enemy.unitToken}吞噬")
-
-            # ── 变身后30秒：根除（触发虚空射线连打） > 坍缩之星 > 虚空射线 > 吞噬
-            else:
-                # 变身后30秒坍缩之星就绪判断：
-                #   非AOE：地上>=10魂 且 身上>=36魂，或恶魔之怒<50时强制使用
-                #   AOE：无限制
-                _star_base_late = (
-                    not player_need_specific_spell_stop
-                    and not player.isMoving
-                    and ctx.spell_cooldown_ready("坍缩之星", spell_queue_window)
-                )
-                if is_aoe:
-                    star_ready_late = _star_base_late
-                else:
-                    star_soul_condition = (
-                        scattered_souls_fragments_count >= 10 and soul_fragments >= 36
-                    )
-                    star_fury_emergency = fury < 60 and soul_fragments >= 30
-                    star_ready_late = _star_base_late and (
-                        star_soul_condition or star_fury_emergency
-                    )
-
-                # 变身后30秒根除就绪判断：恶魔之怒<60+身上>=30时强制使用
-                eradication_ready_late = (
-                    fury < 60
-                    and scattered_souls_fragments_count + soul_fragments >= 30
-                    and moment_of_craving_exists
-                    and ctx.spell_cooldown_ready("根除", spell_queue_window)
-                )
-                fourth_star_immolation_ready = (
-                    self._burst_star_count >= 4
+            # 第四颗星后：献祭 -> 多扣吞噬 -> 半怒眼棱回怒 -> 根除接星。
+            if post_fourth_star:
+                if (
+                    player.enemyCount <= 5
                     and latest_succeeded_cast == "坍缩之星"
-                    and not soul_immolation_exists
-                    and (
-                        fury < 50
-                        or (
-                            soul_fragments >= 36
-                            and scattered_souls_fragments_count >= 10
-                        )
-                    )
-                    and ctx.spell_cooldown_ready("灵魂献祭", spell_queue_window)
-                )
-
-                if fourth_star_immolation_ready:
+                    and immolation_ready
+                    and (ground_souls_full or fury <= 60)
+                ):
                     return self.cast("灵魂献祭")
 
-                if not is_aoe:
-                    # 单体：先根除再虚空射线 > 坍缩之星 > 吞噬
-                    if eradication_ready_late:
-                        return self.cast("target根除")
+                if (
+                    devour_ready
+                    and fury > 60
+                    and (not ground_souls_full or soul_fragments < 40)
+                ):
+                    cast_result = cast_devour()
+                    if cast_result is not None:
+                        return cast_result
 
-                    if star_ready_late:
-                        return self.cast("target坍缩之星")
+                if void_ray_ready and (fury <= 65 or late_fury_phase):
+                    return self.cast("虚空射线")
 
-                    if void_ray_ready:
-                        return self.cast("虚空射线")
+                if delayed_buffed_eradication:
+                    return self.cast("target根除")
 
-                    if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                        if main_enemy is focus:
-                            return self.cast("focus吞噬")
-                        elif main_enemy is target:
-                            return self.cast("target吞噬")
-                        elif player.enemyCount >= 1:
-                            return self.cast("就近吞噬")
-                else:
-                    # AOE：坍缩之星 > 根除 > 虚空射线 > 吞噬
-                    if star_ready_late:
-                        return self.cast("target坍缩之星")
+                if star_ready and can_aim_fifth_star and (
+                    is_aoe or ground_souls_full or body_souls_high or fury < 55
+                ):
+                    return self.cast("target坍缩之星")
 
-                    if eradication_ready_late:
-                        return self.cast("target根除")
+            # 前三星：眼棱优先，带 buff 的根除滞后，多用吞噬攒魂。
+            if self._burst_star_count < 3 and void_ray_ready:
+                return self.cast("虚空射线")
 
-                    if void_ray_ready:
-                        return self.cast("虚空射线")
+            if star_ready and (
+                is_aoe
+                or high_quality_star
+                or latest_succeeded_cast == "虚空射线"
+                or not ground_souls_full
+            ):
+                return self.cast("target坍缩之星")
 
-                    if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-                        if main_enemy is focus:
-                            return self.cast("focus吞噬")
-                        elif main_enemy is target:
-                            return self.cast("target吞噬")
-                        elif player.enemyCount >= 1:
-                            return self.cast("就近吞噬")
+            if delayed_buffed_eradication:
+                return self.cast("target根除")
+
+            if void_ray_ready and (late_fury_phase or fury <= 70):
+                return self.cast("虚空射线")
+
+            if devour_ready:
+                cast_result = cast_devour()
+                if cast_result is not None:
+                    return cast_result
 
             return self.idle("爆发中：等待CD")
 
         # ══════════════════════════════════════════════════════════════
-        # 常态段逻辑（虚空变形外，collapsing_star_exists == False）
-        #
-        # 优先级：
-        #   1. 收割/根除 - 如果已经拥有3层虚落
-        #   2. 虚空变形  - 如虚空变形可用
-        #   3. 根除      - 噬欲时刻激活 且 地上>=10魂
-        #   4. 虚空射线
-        #   5. 灵魂献祭  - 如果未激活（理想情况下仅在变身外使用）
-        #   6. 吞噬
-        #   7. 收割      - 地上>=4魂 且 本次收割可触发虚空变形
+        # 常态/暖机：主动献祭 -> 吞噬攒怒 -> 100 怒眼棱 -> 根除，准备进变身。
         # ══════════════════════════════════════════════════════════════
 
-        # ── 1. 收割/根除：已拥有3层虚落 ────────────────────────────────
+        if immolation_ready:
+            return self.cast("灵魂献祭")
+
+        if devour_ready and fury < 100:
+            cast_result = cast_devour()
+            if cast_result is not None:
+                return cast_result
+
+        if void_ray_ready and fury >= 100:
+            return self.cast("虚空射线")
+
+        if eradication_ready and ground_souls_full and body_souls_safe_for_eradication:
+            return self.cast("target根除")
+
         if voidfall_count >= 3:
-            # 优先根除（若噬欲时刻激活且地上>=10魂）
-            if (
-                moment_of_craving_exists
-                and scattered_souls_fragments_count >= 10
-                and ctx.spell_cooldown_ready("根除", spell_queue_window)
-            ):
+            if eradication_ready and ground_souls_full:
                 return self.cast("target根除")
-            # 否则施放收割
             if ctx.spell_cooldown_ready("收割", spell_queue_window):
                 return self.cast("target收割")
 
-        # ── 2. 虚空变形：怪物血量充足且可用时立即触发（躺平模式下跳过）────
         if (
             lying_flat_mode == "turn_off"
             and ctx.spell_cooldown_ready("虚空变形", spell_queue_window)
             and main_enemy.healthPercent > reaper_health_threshold
             and not player.isMoving
+            and (fury < 70 or soul_fragments >= 35 or not ground_souls_full)
         ):
             return self.cast("虚空变形")
 
-        # ── 3. 根除：噬欲时刻激活 且 地上>=10魂 ───────────────────────
-        if (
-            moment_of_craving_exists
-            and scattered_souls_fragments_count >= 10
-            and ctx.spell_cooldown_ready("根除", spell_queue_window)
-        ):
-            return self.cast("target根除")
-
-        # ── 4. 虚空射线 ──────────────────────────────────────────────
-        if (
-            not player_need_specific_spell_stop
-            and not player.isMoving
-            and fury >= 100
-            and target.isInRangedRange
-            and ctx.spell_cooldown_ready("虚空射线", spell_queue_window)
-        ):
+        if void_ray_ready:
             return self.cast("虚空射线")
 
-        # ── 5. 灵魂献祭：未激活时使用（理想情况下仅在变身外使用）────────
-        # 注意：灵魂献祭在持续时间内可回复24%最大生命值，应急时可忽略此优先级限制
-        if not soul_immolation_exists and ctx.spell_cooldown_ready(
-            "灵魂献祭", spell_queue_window
-        ):
-            return self.cast("灵魂献祭")
-
-        # ── 6. 吞噬：主要填充技能 ────────────────────────────────────
-        if ctx.spell_cooldown_ready("吞噬", spell_queue_window):
-            if main_enemy is focus:
-                return self.cast("focus吞噬")
-            elif main_enemy is target:
-                return self.cast("target吞噬")
-            elif player.enemyCount >= 1:
-                return self.cast("就近吞噬")
-
-        # # ── 7. 收割：地上>=4魂 且 本次收割可触发虚空变形 ───────────────
-        # # （用于为下次爆发蓄势）
-        # if (
-        #     scattered_souls_fragments_count >= 4
-        #     and soul_fragments >= 31
-        #     and ctx.spell_cooldown_ready("收割", spell_queue_window)
-        # ):
-        #     return self.cast("target收割")
+        if devour_ready:
+            cast_result = cast_devour()
+            if cast_result is not None:
+                return cast_result
 
         return self.idle("当前没有合适动作")
