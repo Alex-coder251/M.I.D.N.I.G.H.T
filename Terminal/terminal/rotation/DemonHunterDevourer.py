@@ -483,7 +483,8 @@ class DemonHunterDevourer(BaseRotation):
             and ctx.spell_cooldown_ready("虚空变形", spell_queue_window)
             and main_enemy.healthPercent > reaper_health_threshold
             and not player.isMoving
-            and (fury < 70 or soul_fragments >= 35 or not ground_souls_full)
+            and fury < 70
+            and not ground_souls_full
         ):
             return self.cast("虚空变形")
 
