@@ -257,7 +257,16 @@ class DemonHunterDevourer(BaseRotation):
                 elif target.anyCastIcon not in interrupt_blacklist:
                     target_need_interrupt = True
 
-        if ctx.spell_cooldown_ready("瓦解", spell_queue_window, ignore_gcd=True):
+        protected_interrupt_casts = {"虚空射线", "坍缩之星"}
+        player_cast_protected = (
+            player.castIcon in protected_interrupt_casts
+            or player.channelIcon in protected_interrupt_casts
+        )
+
+        if (
+            not player_cast_protected
+            and ctx.spell_cooldown_ready("瓦解", spell_queue_window, ignore_gcd=True)
+        ):
             if focus_need_interrupt:
                 return self.cast("focus瓦解")
             elif target_need_interrupt:
