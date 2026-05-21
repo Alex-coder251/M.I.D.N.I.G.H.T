@@ -461,12 +461,7 @@ class DemonHunterDevourer(BaseRotation):
         if immolation_ready:
             return self.cast("灵魂献祭")
 
-        if devour_ready and fury < 100:
-            cast_result = cast_devour()
-            if cast_result is not None:
-                return cast_result
-
-        if void_ray_ready and fury >= 100:
+        if void_ray_ready:
             return self.cast("虚空射线")
 
         if eradication_ready and ground_souls_full and body_souls_safe_for_eradication:
@@ -483,13 +478,12 @@ class DemonHunterDevourer(BaseRotation):
             and ctx.spell_cooldown_ready("虚空变形", spell_queue_window)
             and main_enemy.healthPercent > reaper_health_threshold
             and not player.isMoving
-            and fury < 70
-            and not ground_souls_full
         ):
-            return self.cast("虚空变形")
-
-        if void_ray_ready:
-            return self.cast("虚空射线")
+            metamorphosis_after_void_ray = latest_succeeded_cast == "虚空射线"
+            if fury < 70 and not ground_souls_full:
+                return self.cast("虚空变形")
+            if metamorphosis_after_void_ray:
+                return self.cast("虚空变形")
 
         if devour_ready:
             cast_result = cast_devour()
