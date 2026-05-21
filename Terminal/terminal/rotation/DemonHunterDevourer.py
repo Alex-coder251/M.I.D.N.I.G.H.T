@@ -295,9 +295,8 @@ class DemonHunterDevourer(BaseRotation):
         feast_stacks = player.buffStack("灵魂盛宴")
         feast_remaining = player.buffRemain("灵魂盛宴")
 
-        star_ready = (
-            can_stand_cast
-            and ctx.spell_cooldown_ready("坍缩之星", spell_queue_window)
+        star_ready = can_stand_cast and ctx.spell_cooldown_ready(
+            "坍缩之星", spell_queue_window
         )
         void_ray_ready = (
             can_stand_cast
@@ -307,13 +306,10 @@ class DemonHunterDevourer(BaseRotation):
         eradication_ready = ctx.spell_cooldown_ready("根除", spell_queue_window)
         feast_exists = feast_remaining > 0 or feast_stacks > 0
         feast_eradication_ready = (
-            eradication_ready
-            and feast_exists
-            and ground_souls_full
+            eradication_ready and feast_exists and ground_souls_full
         )
-        immolation_ready = (
-            not soul_immolation_exists
-            and ctx.spell_cooldown_ready("灵魂献祭", spell_queue_window)
+        immolation_ready = not soul_immolation_exists and ctx.spell_cooldown_ready(
+            "灵魂献祭", spell_queue_window
         )
         devour_ready = ctx.spell_cooldown_ready("吞噬", spell_queue_window)
 
@@ -352,28 +348,33 @@ class DemonHunterDevourer(BaseRotation):
             late_fury_phase = burst_time >= 35
             can_aim_fifth_star = ground_souls_full or burst_time <= 40
             high_quality_star = is_aoe or feast_stacks >= 20 or ground_souls_full
-            feast_ending_soon = feast_remaining > 0 and feast_remaining <= 1.5
+            feast_ending_soon = feast_remaining > 0 and feast_remaining <= 3
             # 怒气低只表示变身收尾压力变高，不表示坍缩之星需要怒气。
             fifth_star_time_pressure = fury < 55
-            delayed_buffed_eradication = (
-                feast_eradication_ready
+            delayed_buffed_eradication = feast_eradication_ready and (
+                body_souls_safe_for_eradication
+                or feast_ending_soon
+                or latest_succeeded_cast == "坍缩之星"
+            )
+            fifth_star_ready = (
+                star_ready
+                and can_aim_fifth_star
                 and (
-                    body_souls_safe_for_eradication
-                    or feast_ending_soon
-                    or latest_succeeded_cast == "坍缩之星"
+                    is_aoe
+                    or ground_souls_full
+                    or body_souls_high
+                    or fifth_star_time_pressure
                 )
             )
-            fifth_star_ready = star_ready and can_aim_fifth_star and (
-                is_aoe
-                or ground_souls_full
-                or body_souls_high
-                or fifth_star_time_pressure
-            )
-            fifth_star_window = post_fourth_star and can_aim_fifth_star and (
-                latest_succeeded_cast in {"根除", "威厄高尔的最终凝视"}
-                or ground_souls_full
-                or body_souls_high
-                or fifth_star_time_pressure
+            fifth_star_window = (
+                post_fourth_star
+                and can_aim_fifth_star
+                and (
+                    latest_succeeded_cast in {"根除", "威厄高尔的最终凝视"}
+                    or ground_souls_full
+                    or body_souls_high
+                    or fifth_star_time_pressure
+                )
             )
             normal_star_ready = star_ready and (
                 is_aoe
@@ -381,7 +382,24 @@ class DemonHunterDevourer(BaseRotation):
                 or latest_succeeded_cast == "虚空射线"
                 or not ground_souls_full
             )
-            gaze_star_ready = fifth_star_ready if post_fourth_star else normal_star_ready
+            single_target_feast_opener = (
+                not is_aoe
+                and self._burst_star_count == 0
+                and feast_exists
+            )
+            single_target_feast_star_ready = (
+                single_target_feast_opener
+                and star_ready
+                and feast_stacks >= 15
+            )
+            single_target_feast_eradication_ready = (
+                single_target_feast_opener
+                and feast_eradication_ready
+                and feast_stacks < 15
+            )
+            gaze_star_ready = (
+                fifth_star_ready if post_fourth_star else normal_star_ready
+            )
 
             # 虚空变形后紧接着使用"鲁莽药水"
             if (
@@ -401,9 +419,7 @@ class DemonHunterDevourer(BaseRotation):
 
             if (
                 lying_flat_mode == "turn_off"
-                and ctx.spell_cooldown_ready(
-                    "威厄高尔的最终凝视", spell_queue_window, ignore_gcd=True
-                )
+                and ctx.spell_cooldown_ready("威厄高尔的最终凝视", spell_queue_window)
                 and gaze_star_ready
             ):
                 return self.cast("威厄高尔的最终凝视")
@@ -439,7 +455,19 @@ class DemonHunterDevourer(BaseRotation):
                     if cast_result is not None:
                         return cast_result
 
-            # 前三星：虚空射线优先，带 buff 的根除滞后，多用吞噬攒魂。
+            # 前三星：未带盛宴进变身时虚空射线优先；带盛宴时按层数先星或根除。
+            if single_target_feast_star_ready:
+                return self.cast("target坍缩之星")
+
+            if single_target_feast_eradication_ready:
+                return self.cast("target根除")
+
+            if single_target_feast_opener and feast_stacks >= 15:
+                return self.idle("单体盛宴进变身：等待坍缩之星")
+
+            if single_target_feast_opener and feast_stacks < 15 and ground_souls_full:
+                return self.idle("单体盛宴进变身：等待根除")
+
             if self._burst_star_count < 3 and void_ray_ready:
                 return self.cast("虚空射线")
 
