@@ -359,6 +359,12 @@ class DemonHunterDevourer(BaseRotation):
             fifth_star_ready = star_ready and can_aim_fifth_star and (
                 is_aoe or ground_souls_full or body_souls_high or fury < 55
             )
+            fifth_star_window = post_fourth_star and can_aim_fifth_star and (
+                latest_succeeded_cast in {"根除", "威厄高尔的最终凝视"}
+                or ground_souls_full
+                or body_souls_high
+                or fury < 55
+            )
             normal_star_ready = star_ready and (
                 is_aoe
                 or high_quality_star
@@ -394,6 +400,9 @@ class DemonHunterDevourer(BaseRotation):
 
             # 第四颗星后：献祭 -> 多扣吞噬 -> 半怒眼棱回怒 -> 根除接星。
             if post_fourth_star:
+                if fifth_star_ready:
+                    return self.cast("target坍缩之星")
+
                 if (
                     player.enemyCount <= 5
                     and latest_succeeded_cast == "坍缩之星"
@@ -401,6 +410,15 @@ class DemonHunterDevourer(BaseRotation):
                     and (ground_souls_full or fury <= 60)
                 ):
                     return self.cast("灵魂献祭")
+
+                if void_ray_ready and (fury <= 65 or late_fury_phase):
+                    return self.cast("虚空射线")
+
+                if delayed_buffed_eradication:
+                    return self.cast("target根除")
+
+                if fifth_star_window:
+                    return self.idle("五星窗口：等待坍缩之星")
 
                 if (
                     devour_ready
@@ -410,15 +428,6 @@ class DemonHunterDevourer(BaseRotation):
                     cast_result = cast_devour()
                     if cast_result is not None:
                         return cast_result
-
-                if void_ray_ready and (fury <= 65 or late_fury_phase):
-                    return self.cast("虚空射线")
-
-                if delayed_buffed_eradication:
-                    return self.cast("target根除")
-
-                if fifth_star_ready:
-                    return self.cast("target坍缩之星")
 
             # 前三星：眼棱优先，带 buff 的根除滞后，多用吞噬攒魂。
             if self._burst_star_count < 3 and void_ray_ready:
