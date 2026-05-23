@@ -320,6 +320,10 @@ class DemonHunterDevourer(BaseRotation):
             "灵魂献祭", spell_queue_window
         )
         devour_ready = ctx.spell_cooldown_ready("吞噬", spell_queue_window)
+        pre_metamorphosis_high_fury = (
+            fury >= 70 and fury < 100 and not ground_souls_full
+        )
+        pre_metamorphosis_low_fury = fury < 70 and not ground_souls_full
 
         # ══════════════════════════════════════════════════════════════
         # 爆发段：前三星虚空射线优先，带 buff 的根除滞后，第四星后按献祭轴处理。
@@ -511,8 +515,10 @@ class DemonHunterDevourer(BaseRotation):
             and not player.isMoving
         ):
             metamorphosis_after_void_ray = latest_succeeded_cast == "虚空射线"
-            if fury < 70 and not ground_souls_full:
+            if pre_metamorphosis_low_fury:
                 return self.cast("虚空变形")
+            if pre_metamorphosis_high_fury and devour_ready:
+                return cast_devour()
             if metamorphosis_after_void_ray:
                 return self.cast("虚空变形")
 
