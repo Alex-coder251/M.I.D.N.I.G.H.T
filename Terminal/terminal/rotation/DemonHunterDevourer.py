@@ -1,4 +1,4 @@
-"""
+﻿"""
 35魂
 天赋：CgcBG5bbocFKcv+yIq8fPd6ORBA2mxMzMzMzMGzMAAAAAAAMmtBDAAAAAAAAmxMMzMzMzMzMzYmNzYsolFmZmZ2abmZGADDABMGMmB
 """
@@ -320,9 +320,7 @@ class DemonHunterDevourer(BaseRotation):
             "灵魂献祭", spell_queue_window
         )
         devour_ready = ctx.spell_cooldown_ready("吞噬", spell_queue_window)
-        pre_metamorphosis_high_fury = (
-            fury >= 70 and fury < 100 and not ground_souls_full
-        )
+        pre_metamorphosis_high_fury = fury >= 70 and fury < 100
         pre_metamorphosis_low_fury = fury < 70 and not ground_souls_full
 
         # ══════════════════════════════════════════════════════════════
