@@ -263,9 +263,8 @@ class DemonHunterDevourer(BaseRotation):
             or player.channelIcon in protected_interrupt_casts
         )
 
-        if (
-            not player_cast_protected
-            and ctx.spell_cooldown_ready("瓦解", spell_queue_window, ignore_gcd=True)
+        if not player_cast_protected and ctx.spell_cooldown_ready(
+            "瓦解", spell_queue_window, ignore_gcd=True
         ):
             if focus_need_interrupt:
                 return self.cast("focus瓦解")
@@ -392,14 +391,10 @@ class DemonHunterDevourer(BaseRotation):
                 or not ground_souls_full
             )
             single_target_feast_opener = (
-                not is_aoe
-                and self._burst_star_count == 0
-                and feast_exists
+                not is_aoe and self._burst_star_count == 0 and feast_exists
             )
             single_target_feast_star_ready = (
-                single_target_feast_opener
-                and star_ready
-                and feast_stacks >= 15
+                single_target_feast_opener and star_ready and feast_stacks >= 15
             )
             single_target_feast_eradication_ready = (
                 single_target_feast_opener
