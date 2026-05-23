@@ -18,6 +18,7 @@ class DemonHunterDevourer(BaseRotation):
         self._burst_star_count = 0
         self._burst_void_ray_count = 0
         self._last_seen_succeeded_cast = ""
+        self._entered_burst_after_void_ray = False
 
         self.macroTable = {
             "target吞噬": "ALT-NUMPAD1",
@@ -209,6 +210,8 @@ class DemonHunterDevourer(BaseRotation):
             self._burst_star_count = 0
             self._burst_void_ray_count = 0
             self._last_seen_succeeded_cast = ""
+            if latest_succeeded_cast != "虚空变形":
+                self._entered_burst_after_void_ray = False
         elif latest_succeeded_cast != self._last_seen_succeeded_cast:
             if latest_succeeded_cast == "坍缩之星":
                 self._burst_star_count += 1
@@ -461,15 +464,41 @@ class DemonHunterDevourer(BaseRotation):
                     if cast_result is not None:
                         return cast_result
 
-            # 前三星：未带盛宴进变身时虚空射线优先；带盛宴时按层数先星或根除。
-            if single_target_feast_star_ready:
-                return self.cast("target坍缩之星")
+            # 单体前三星：按进入变身前是否打过虚空射线拆开场序列。
+            if not is_aoe and self._burst_star_count < 3:
+                if self._entered_burst_after_void_ray:
+                    if single_target_feast_star_ready:
+                        return self.cast("target坍缩之星")
 
-            if single_target_feast_eradication_ready:
-                return self.cast("target根除")
+                    if single_target_feast_eradication_ready:
+                        return self.cast("target根除")
 
-            if self._burst_star_count < 3 and void_ray_ready:
-                return self.cast("虚空射线")
+                    if delayed_buffed_eradication:
+                        return self.cast("target根除")
+
+                    if normal_star_ready:
+                        return self.cast("target坍缩之星")
+
+                    if void_ray_ready:
+                        return self.cast("虚空射线")
+                else:
+                    if void_ray_ready:
+                        return self.cast("虚空射线")
+
+                    if normal_star_ready:
+                        return self.cast("target坍缩之星")
+
+                    if delayed_buffed_eradication:
+                        return self.cast("target根除")
+            else:
+                if single_target_feast_star_ready:
+                    return self.cast("target坍缩之星")
+
+                if single_target_feast_eradication_ready:
+                    return self.cast("target根除")
+
+                if self._burst_star_count < 3 and void_ray_ready:
+                    return self.cast("虚空射线")
 
             if delayed_buffed_eradication:
                 return self.cast("target根除")
@@ -513,12 +542,14 @@ class DemonHunterDevourer(BaseRotation):
             and not player.isMoving
         ):
             metamorphosis_after_void_ray = latest_succeeded_cast == "虚空射线"
+            if metamorphosis_after_void_ray:
+                self._entered_burst_after_void_ray = True
+                return self.cast("虚空变形")
             if pre_metamorphosis_low_fury:
+                self._entered_burst_after_void_ray = False
                 return self.cast("虚空变形")
             if pre_metamorphosis_high_fury and devour_ready:
                 return cast_devour()
-            if metamorphosis_after_void_ray:
-                return self.cast("虚空变形")
 
         if devour_ready:
             cast_result = cast_devour()
