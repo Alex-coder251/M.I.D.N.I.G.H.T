@@ -32,6 +32,7 @@ insert(cooldownSpells, { type = "item", itemID = 5512, name = "治疗石" })
 insert(cooldownSpells, { type = "item", itemID = 258138, name = "强效治疗药水" })
 insert(cooldownSpells, { spellID = 2061, name = "快速治疗" })
 insert(cooldownSpells, { spellID = 585, name = "惩击" })
+insert(cooldownSpells, { type = "inventory", itemID = 250144, slots = { 13, 14 }, name = "烬翼羽毛" })
 
 
 

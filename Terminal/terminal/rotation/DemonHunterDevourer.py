@@ -315,9 +315,8 @@ class DemonHunterDevourer(BaseRotation):
             and ctx.spell_cooldown_ready("虚空射线", spell_queue_window)
         )
         eradication_ready = ctx.spell_cooldown_ready("根除", spell_queue_window)
-        feast_exists = feast_remaining > 0 or feast_stacks > 0
         feast_eradication_ready = (
-            eradication_ready and feast_exists and ground_souls_full
+            eradication_ready and moment_of_craving_exists and ground_souls_full
         )
         immolation_ready = not soul_immolation_exists and ctx.spell_cooldown_ready(
             "灵魂献祭", spell_queue_window
@@ -361,12 +360,14 @@ class DemonHunterDevourer(BaseRotation):
             late_fury_phase = burst_time >= 35
             can_aim_fifth_star = ground_souls_full or burst_time <= 40
             high_quality_star = is_aoe or feast_stacks >= 20 or ground_souls_full
-            feast_ending_soon = feast_remaining > 0 and feast_remaining <= 3
+            craving_ending_soon = (
+                moment_of_craving_remaining > 0 and moment_of_craving_remaining <= 2
+            )
             # 怒气低只表示变身收尾压力变高，不表示坍缩之星需要怒气。
             fifth_star_time_pressure = fury < 55
             delayed_buffed_eradication = feast_eradication_ready and (
                 body_souls_safe_for_eradication
-                or feast_ending_soon
+                or craving_ending_soon
                 or latest_succeeded_cast == "坍缩之星"
             )
             fifth_star_ready = (
@@ -396,7 +397,7 @@ class DemonHunterDevourer(BaseRotation):
                 or not ground_souls_full
             )
             single_target_feast_opener = (
-                not is_aoe and self._burst_star_count == 0 and feast_exists
+                not is_aoe and self._burst_star_count == 0 and moment_of_craving_exists
             )
             single_target_feast_star_ready = (
                 single_target_feast_opener and star_ready and feast_stacks >= 15
