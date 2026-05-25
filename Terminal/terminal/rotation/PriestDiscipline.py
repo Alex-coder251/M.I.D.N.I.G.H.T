@@ -121,9 +121,9 @@ class PriestDiscipline(BaseRotation):
             "绝望祷言": "SHIFT-F8",
             "福音": "SHIFT-F9",
             # 暗言术：痛
-            "治疗石": "SHIFT-F10",
+            "治疗石": "CTRL-F10",
             "强效治疗药水": "SHIFT-F11",
-            "烬翼羽毛": "SHIFT-F12",
+            "烬翼羽毛": "CTRL-F11",
             "target痛": "SHIFT-,",
             "focus痛": "ALT-,",
             # 暗言术：灭
