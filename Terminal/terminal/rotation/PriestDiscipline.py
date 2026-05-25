@@ -123,6 +123,7 @@ class PriestDiscipline(BaseRotation):
             # 暗言术：痛
             "治疗石": "SHIFT-F10",
             "强效治疗药水": "SHIFT-F11",
+            "烬翼羽毛": "SHIFT-F12",
             "target痛": "SHIFT-,",
             "focus痛": "ALT-,",
             # 暗言术：灭
@@ -352,6 +353,9 @@ class PriestDiscipline(BaseRotation):
                     return self.cast(f"player真言术盾")
 
             return self.idle("未进入战斗")
+
+        if ctx.spell_cooldown_ready("烬翼羽毛", spell_queue_window):
+            return self.cast("烬翼羽毛")
 
         # print(f"当前时间: {datetime.now().strftime('%H:%M:%S')}", end="; ")
 
