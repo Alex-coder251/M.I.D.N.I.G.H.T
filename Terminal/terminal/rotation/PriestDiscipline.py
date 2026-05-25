@@ -370,8 +370,8 @@ class PriestDiscipline(BaseRotation):
             return self.cast("绝望祷言")
 
         if player.health_base < desperate_prayer_hp_threshold:
-            # if ctx.spell_cooldown_ready("治疗石", spell_queue_window):
-            #     return self.cast("治疗石")
+            if ctx.spell_cooldown_ready("治疗石", spell_queue_window):
+                return self.cast("治疗石")
 
             if ctx.spell_cooldown_ready("强效治疗药水", spell_queue_window):
                 return self.cast("强效治疗药水")
