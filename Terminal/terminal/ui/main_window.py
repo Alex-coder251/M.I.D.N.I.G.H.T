@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 from PySide6.QtCore import QThread, QTime, QTimer, Qt, Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QInputDialog, QMainWindow, QTabWidget
+from PySide6.QtWidgets import QMainWindow, QTabWidget
 
 from ..capture import get_monitors
 from ..keyboard import get_windows_by_title, send_hot_key
@@ -589,11 +589,6 @@ class MainWindow(QMainWindow):
         self._shutdown_rotation_worker_thread()
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        text, ok = QInputDialog.getText(self, "确认关闭", "输入 exit 以关闭程序: ")
-        if not ok or text != "exit":
-            event.ignore()
-            return
-
         if self.title_editor_dialog is not None:
             self.title_editor_dialog.close()
         self._shutdown_worker_thread()
