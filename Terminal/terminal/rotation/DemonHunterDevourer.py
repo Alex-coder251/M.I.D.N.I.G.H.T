@@ -129,7 +129,7 @@ class DemonHunterDevourer(BaseRotation):
         # 施法保护阈值，剩余施法时间低于此值时不打断当前施法，单位百分比。设为 90 意味着始终等待施法完成（任何技能施法时间都远小于此值）
         cast_queue_window_threshold = 90
         # 引导保护阈值，剩余引导时间低于此值时不打断当前引导，单位是百分比。设为 90 意味着始终等待引导完成
-        channel_queue_window_threshold = 90
+        channel_queue_window_threshold = 95
 
         # ── 基础状态检查 ────────────────────────────────────────────
 
