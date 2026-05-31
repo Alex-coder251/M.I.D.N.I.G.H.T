@@ -28,7 +28,7 @@
 - `DejaVu_Player` / `DejaVu_Party` / `DejaVu_Enemy`: 玩家、小队、敌对单位状态输出。
 - `DejaVu_Spell` / `DejaVu_Aura`: 技能冷却/充能和 Aura 输出。
 - `DejaVu_Common`: 通用显示单元、黑名单、爆发、鼠标、延迟更新等共享能力。
-- `DejaVu_DeathKnight` / `DejaVu_DemonHunter` / `DejaVu_Druid` / `DejaVu_Priest`: 职业模块，专精代码放在职业目录下的子目录。
+- `DejaVu_DeathKnight` / `DejaVu_DemonHunter` / `DejaVu_Druid` / `DejaVu_Hunter` / `DejaVu_Priest` / `DejaVu_Warlock`: 职业模块，专精代码放在职业目录下的子目录。
 
 当前已有专精目录：
 
@@ -36,7 +36,9 @@
 - `DejaVu_DemonHunter/Devourer`
 - `DejaVu_Druid/Guardian`
 - `DejaVu_Druid/Restoration`
+- `DejaVu_Hunter/BeastMastery`
 - `DejaVu_Priest/Discipline`
+- `DejaVu_Warlock/Demonology`
 
 第三方依赖目录：
 
@@ -58,7 +60,7 @@
 6. `DejaVu_Enemy`
 7. `DejaVu_Party`
 8. `DejaVu_Common`
-9. `DejaVu_DeathKnight` / `DejaVu_Druid` / `DejaVu_Priest` / `DejaVu_DemonHunter`
+9. `DejaVu_DeathKnight` / `DejaVu_Druid` / `DejaVu_Priest` / `DejaVu_DemonHunter` / `DejaVu_Hunter` / `DejaVu_Warlock`
 
 矩阵初始化扩展点沿用代码里的既有拼写 `DejaVu.MartixInitFuncs`，整理文档时不要自行改成 `MatrixInitFuncs`。
 

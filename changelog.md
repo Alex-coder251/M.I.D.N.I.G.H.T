@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-05-31
+
+### Add Demonology Warlock DejaVu plugin
+
+- Added `DejaVu_Warlock` with a Demonology spec module that displays soul shards from `Enum.PowerType.SoulShards`, matching SenseiClassResourceBar's warlock resource source.
+- Wired the loader to load the warlock class addon and documented the new class/spec module in the DejaVu overview.
+
+Verification:
+
+- `luacheck DejaVu_Warlock DejaVu_Loader` -> 0 warnings / 0 errors
+- `git diff --check` -> no whitespace errors
+
 ## 2026-05-17
 
 ### Route item cooldowns through spell output

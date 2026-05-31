@@ -25,4 +25,6 @@ elseif classFilename == "DEMONHUNTER" then
     LoadAddOn("DejaVu_DemonHunter")
 elseif classFilename == "HUNTER" then
     LoadAddOn("DejaVu_Hunter")
+elseif classFilename == "WARLOCK" then
+    LoadAddOn("DejaVu_Warlock")
 end
