@@ -2,6 +2,17 @@
 
 ## 2026-05-31
 
+### Add Demonology Warlock macros
+
+- Added Demonology Warlock secure macro buttons for the spells registered in `Spell.lua`, mapped from `ALT-NUMPAD1` through `ALT-NUMPAD8` with `CTRL-F12` kept for reload.
+
+Verification:
+
+- `luacheck DejaVu_Warlock` -> 0 warnings / 0 errors
+- `git diff --check` -> no whitespace errors
+
+## 2026-05-31
+
 ### Add Demonology Warlock DejaVu plugin
 
 - Added `DejaVu_Warlock` with a Demonology spec module that displays soul shards from `Enum.PowerType.SoulShards`, matching SenseiClassResourceBar's warlock resource source.
