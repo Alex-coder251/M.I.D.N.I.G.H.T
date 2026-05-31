@@ -1,5 +1,7 @@
 local addonName, addonTable             = ... -- luacheck: ignore addonTable
 
+local insert                            = table.insert
+
 local UnitClass                         = UnitClass
 local GetSpecialization                 = GetSpecialization
 
@@ -10,3 +12,16 @@ if classFilename ~= "WARLOCK" then
     return
 end
 if currentSpec ~= 2 then return end
+
+local DejaVu = _G["DejaVu"]
+local cooldownSpells = DejaVu.cooldownSpells
+local chargeSpells = DejaVu.chargeSpells
+
+insert(cooldownSpells, { spellID = 105174, name = "古尔丹之手" })
+insert(cooldownSpells, { spellID = 691, name = "召唤地狱猎犬" })
+insert(cooldownSpells, { spellID = 688, name = "召唤小鬼" })
+insert(cooldownSpells, { spellID = 104316, name = "召唤恐怖猎犬" })
+insert(cooldownSpells, { spellID = 30146, name = "召唤恶魔卫士" })
+insert(cooldownSpells, { spellID = 264178, name = "恶魔之箭" })
+insert(cooldownSpells, { spellID = 686, name = "暗影箭" })
+insert(cooldownSpells, { spellID = 196277, name = "内爆" })
