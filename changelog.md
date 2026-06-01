@@ -2,6 +2,17 @@
 
 ## 2026-06-01
 
+### Fix DejaVu global enable cell refresh
+
+- Rewrote `DejaVu_Common/Enable.lua` so the `x=83,y=0` global enable cell initializes and refreshes every 0.1 seconds instead of being trapped behind a malformed comment line.
+
+Verification:
+
+- `luacheck DejaVu_Common` -> 0 errors; 3 pre-existing warnings in `AssistedCombat.lua` and `Burst.lua`
+- `git diff --check` -> no whitespace errors
+
+## 2026-06-01
+
 ### Fix Demonology Warlock rotation names
 
 - Replaced mojibake spell, macro, buff, and UI strings in `WarlockDemonology.py` with normal Chinese names.
