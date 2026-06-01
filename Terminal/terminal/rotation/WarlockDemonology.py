@@ -15,6 +15,13 @@ DOOMGUARD = "召唤末日守卫"
 DEMONIC_TYRANT = "召唤恶魔暴君"
 
 
+DEMON_CORE = "恶魔之核"
+WILD_IMP = "野生小鬼"
+ARGUS_PORTAL = "阿古斯传送门"
+DEMONIC_TYRANT_BUFF = "恶魔暴君"
+FOOD_AND_DRINK = "食物和饮料"
+
+
 class WarlockDemonology(BaseRotation):
     name = "恶魔术灵魂收割者"
     desc = "恶魔学识术士灵魂收割者大秘境循环。"
@@ -65,7 +72,7 @@ class WarlockDemonology(BaseRotation):
         if player.isEmpowering:
             return self.idle("正在蓄力")
 
-        if player.hasBuff("食物和饮料"):
+        if player.hasBuff(FOOD_AND_DRINK):
             return self.idle("正在吃喝")
 
         if not player.isInCombat:
@@ -80,12 +87,12 @@ class WarlockDemonology(BaseRotation):
         )
         soul_shards = round(soul_shards_ratio * 5)
 
-        demon_core_stacks = player.buffStack("恶魔之核")
-        wild_imp_stacks = player.buffStack("野生小鬼")
+        demon_core_stacks = player.buffStack(DEMON_CORE)
+        wild_imp_stacks = player.buffStack(WILD_IMP)
+
         dreadstalkers_ready = ctx.spell_cooldown_ready(
             DREADSTALKERS, spell_queue_window
         )
-        print(f"恐惧猎犬准备就绪: {dreadstalkers_ready}")
         implosion_ready = ctx.spell_cooldown_ready(IMPLOSION, spell_queue_window)
         hand_ready = ctx.spell_cooldown_ready(HAND_OF_GULDAN, spell_queue_window)
         demonbolt_ready = ctx.spell_cooldown_ready(DEMONBOLT, spell_queue_window)
@@ -93,27 +100,40 @@ class WarlockDemonology(BaseRotation):
         tyrant_ready = ctx.spell_cooldown_ready(DEMONIC_TYRANT, spell_queue_window)
         doomguard_ready = ctx.spell_cooldown_ready(DOOMGUARD, spell_queue_window)
 
-        is_aoe = player.enemyCount >= 3
-        portal_window = player.hasBuff("阿古斯传送门")
-        tyrant_window = player.hasBuff("恶魔暴君")
+        portal_window = player.hasBuff(ARGUS_PORTAL)
+        tyrant_window = player.hasBuff(DEMONIC_TYRANT_BUFF)
+        burst_window = portal_window or tyrant_window
 
-        if doomguard_ready and (tyrant_ready or tyrant_window or portal_window):
-            return self.cast(f"target{DOOMGUARD}")
-
-        if tyrant_ready and soul_shards >= 5:
-            return self.cast(f"target{DEMONIC_TYRANT}")
-
-        if portal_window or tyrant_window:
+        # 传送门期间：围绕古手循环，优先把传送门返片转化成更多古手。
+        if burst_window:
             if hand_ready and soul_shards >= 3:
                 return self.cast(f"target{HAND_OF_GULDAN}")
-            if demon_core_stacks >= 1 and demonbolt_ready:
-                return self.cast(f"target{DEMONBOLT}")
+
             if dreadstalkers_ready and soul_shards >= 2:
                 return self.cast(f"target{DREADSTALKERS}")
+
+            if demon_core_stacks >= 1 and demonbolt_ready:
+                return self.cast(f"target{DEMONBOLT}")
+
+            if implosion_ready and wild_imp_stacks >= 6:
+                return self.cast(IMPLOSION)
+
+            if shadow_bolt_ready:
+                return self.cast(f"target{SHADOW_BOLT}")
+
+            return self.idle("传送门期间：等待古手循环资源")
+
+        # 传送门前：确保资源和关键召唤物尽量铺好，然后开暴君进传送门。
+        if doomguard_ready and tyrant_ready:
+            return self.cast(f"target{DOOMGUARD}")
 
         if dreadstalkers_ready and soul_shards >= 2:
             return self.cast(f"target{DREADSTALKERS}")
 
+        if tyrant_ready and soul_shards >= 5:
+            return self.cast(f"target{DEMONIC_TYRANT}")
+
+        # 平稳期：小狗卡 CD，内爆 6 鬼打，避免碎片和恶魔之核溢出。
         if implosion_ready and wild_imp_stacks >= 6:
             return self.cast(IMPLOSION)
 

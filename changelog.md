@@ -2,6 +2,18 @@
 
 ## 2026-06-01
 
+### Add Demonology Warlock burst cycle
+
+- Reworked `WarlockDemonology.py` burst handling from the guide image into pre-portal setup, portal-window Hand of Gul'dan cycling, and steady-state fallback phases.
+- Removed the temporary Dreadstalkers debug print from the rotation path.
+
+Verification:
+
+- `uv run python -m py_compile terminal\rotation\WarlockDemonology.py` -> passed
+- `git diff --check` -> no whitespace errors
+
+## 2026-06-01
+
 ### Require Demon Core for Demonbolt
 
 - Updated the Demonology Warlock Terminal rotation so `恶魔之箭` is only cast while `恶魔之核` has at least one stack.
