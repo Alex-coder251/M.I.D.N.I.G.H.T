@@ -2,6 +2,17 @@
 
 ## 2026-06-01
 
+### Require Demon Core for Demonbolt
+
+- Updated the Demonology Warlock Terminal rotation so `恶魔之箭` is only cast while `恶魔之核` has at least one stack.
+
+Verification:
+
+- `uv run python -m py_compile terminal\rotation\WarlockDemonology.py` -> passed
+- `git diff --check` -> no whitespace errors
+
+## 2026-06-01
+
 ### Fix DejaVu global enable cell refresh
 
 - Rewrote `DejaVu_Common/Enable.lua` so the `x=83,y=0` global enable cell initializes and refreshes every 0.1 seconds instead of being trapped behind a malformed comment line.

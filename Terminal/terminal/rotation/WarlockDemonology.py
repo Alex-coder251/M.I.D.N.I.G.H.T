@@ -103,7 +103,7 @@ class WarlockDemonology(BaseRotation):
         if portal_window or tyrant_window:
             if hand_ready and soul_shards >= 3:
                 return self.cast(f"target{HAND_OF_GULDAN}")
-            if demonbolt_ready and (demon_core_stacks >= 1 or soul_shards <= 3):
+            if demon_core_stacks >= 1 and demonbolt_ready:
                 return self.cast(f"target{DEMONBOLT}")
             if dreadstalkers_ready and soul_shards >= 2:
                 return self.cast(f"target{DREADSTALKERS}")
@@ -123,7 +123,7 @@ class WarlockDemonology(BaseRotation):
         if hand_ready and soul_shards >= 3 and not dreadstalkers_ready:
             return self.cast(f"target{HAND_OF_GULDAN}")
 
-        if demonbolt_ready and (demon_core_stacks >= 1 or soul_shards <= 3):
+        if demon_core_stacks >= 1 and demonbolt_ready:
             return self.cast(f"target{DEMONBOLT}")
 
         if shadow_bolt_ready:
