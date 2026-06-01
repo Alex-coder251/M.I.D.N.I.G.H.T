@@ -8,6 +8,8 @@ local UnitClass                         = UnitClass
 local UnitPower                         = UnitPower
 local UnitPowerMax                      = UnitPowerMax
 local GetSpecialization                 = GetSpecialization
+local GetPlayerAuraBySpellID            = C_UnitAuras.GetPlayerAuraBySpellID
+local IsSpellKnown                      = C_SpellBook.IsSpellKnown
 
 local className, classFilename, classId = UnitClass("player") -- luacheck: ignore className classId
 local currentSpec                       = GetSpecialization()
