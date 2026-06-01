@@ -7,6 +7,7 @@ from .DemonHunterDevourer import DemonHunterDevourer
 from .DemonHunterVengeance import DemonHunterVengeance
 from .DruidGuardian57 import DruidGuardian57
 from .HunterBeastMastery import HunterBeastMastery
+from .WarlockDemonology import WarlockDemonology
 
 ALL_ROTATIONS = [
     DemonHunterDevourer,
@@ -18,4 +19,5 @@ ALL_ROTATIONS = [
     DruidGuardian57,
     DemonHunterVengeance,
     HunterBeastMastery,
+    WarlockDemonology,
 ]

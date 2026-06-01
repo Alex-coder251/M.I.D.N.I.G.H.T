@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-06-01
+
+### Add Demonology Warlock Terminal rotation
+
+- Added a `WarlockDemonology` Terminal rotation for Demonology Warlock Soul Harvester play, following the provided guide's priorities around soul shard spending, Dreadstalkers, Implosion, Demonbolt, Tyrant, and Doomguard windows.
+- Registered the new rotation in the Terminal rotation list.
+
+Verification:
+
+- `uv run python -m py_compile terminal\rotation\WarlockDemonology.py` -> passed
+- `git diff --check` -> no whitespace errors
+
 ## 2026-05-31
 
 ### Add Demonology Warlock macros
