@@ -4,6 +4,18 @@ from terminal.context import Context
 from .base import BaseRotation
 
 
+HAND_OF_GULDAN = "古尔丹之手"
+FELHUNTER = "召唤地狱猎犬"
+IMP = "召唤小鬼"
+DREADSTALKERS = "召唤恐惧猎犬"
+FELGUARD = "召唤恶魔卫士"
+DEMONBOLT = "恶魔之箭"
+SHADOW_BOLT = "暗影箭"
+IMPLOSION = "内爆"
+DOOMGUARD = "召唤末日守卫"
+DEMONIC_TYRANT = "召唤恶魔暴君"
+
+
 class WarlockDemonology(BaseRotation):
     name = "恶魔术灵魂收割者"
     desc = "恶魔学识术士灵魂收割者大秘境循环。"
@@ -12,16 +24,16 @@ class WarlockDemonology(BaseRotation):
         super().__init__()
 
         self.macroTable = {
-            "target鍙ゅ皵涓逛箣鎵?": "ALT-NUMPAD1",
-            "鍙敜鍦扮嫳鐚庣姮": "ALT-NUMPAD2",
-            "鍙敜灏忛": "ALT-NUMPAD3",
-            "target鍙敜鎭愭儳鐚庣姮": "ALT-NUMPAD4",
-            "鍙敜鎭堕瓟鍗＋": "ALT-NUMPAD5",
-            "target鎭堕瓟涔嬬": "ALT-NUMPAD6",
-            "target鏆楀奖绠?": "ALT-NUMPAD7",
-            "鍐呯垎": "ALT-NUMPAD8",
-            "target鍙敜鏈棩瀹堝崼": "ALT-NUMPAD9",
-            "target鍙敜鎭堕瓟鏆村悰": "ALT-NUMPAD0",
+            f"target{HAND_OF_GULDAN}": "ALT-NUMPAD1",
+            FELHUNTER: "ALT-NUMPAD2",
+            IMP: "ALT-NUMPAD3",
+            f"target{DREADSTALKERS}": "ALT-NUMPAD4",
+            FELGUARD: "ALT-NUMPAD5",
+            f"target{DEMONBOLT}": "ALT-NUMPAD6",
+            f"target{SHADOW_BOLT}": "ALT-NUMPAD7",
+            IMPLOSION: "ALT-NUMPAD8",
+            f"target{DOOMGUARD}": "ALT-NUMPAD9",
+            f"target{DEMONIC_TYRANT}": "ALT-NUMPAD0",
         }
 
     def main_rotation(self, ctx: Context) -> tuple[str, float, str]:
@@ -69,60 +81,52 @@ class WarlockDemonology(BaseRotation):
 
         demon_core_stacks = player.buffStack("恶魔之核")
         dreadstalkers_ready = ctx.spell_cooldown_ready(
-            "鍙敜鎭愭儳鐚庣姮", spell_queue_window
+            DREADSTALKERS, spell_queue_window
         )
-        implosion_ready = ctx.spell_cooldown_ready("鍐呯垎", spell_queue_window)
-        hand_ready = ctx.spell_cooldown_ready("鍙ゅ皵涓逛箣鎵?", spell_queue_window)
-        demonbolt_ready = ctx.spell_cooldown_ready(
-            "鎭堕瓟涔嬬", spell_queue_window
-        )
-        shadow_bolt_ready = ctx.spell_cooldown_ready(
-            "鏆楀奖绠?", spell_queue_window
-        )
-        tyrant_ready = ctx.spell_cooldown_ready(
-            "鍙敜鎭堕瓟鏆村悰", spell_queue_window
-        )
-        doomguard_ready = ctx.spell_cooldown_ready(
-            "鍙敜鏈棩瀹堝崼", spell_queue_window
-        )
+        implosion_ready = ctx.spell_cooldown_ready(IMPLOSION, spell_queue_window)
+        hand_ready = ctx.spell_cooldown_ready(HAND_OF_GULDAN, spell_queue_window)
+        demonbolt_ready = ctx.spell_cooldown_ready(DEMONBOLT, spell_queue_window)
+        shadow_bolt_ready = ctx.spell_cooldown_ready(SHADOW_BOLT, spell_queue_window)
+        tyrant_ready = ctx.spell_cooldown_ready(DEMONIC_TYRANT, spell_queue_window)
+        doomguard_ready = ctx.spell_cooldown_ready(DOOMGUARD, spell_queue_window)
 
         is_aoe = player.enemyCount >= 3
         portal_window = player.hasBuff("阿古斯传送门")
         tyrant_window = player.hasBuff("恶魔暴君")
 
         if doomguard_ready and (tyrant_ready or tyrant_window or portal_window):
-            return self.cast("target鍙敜鏈棩瀹堝崼")
+            return self.cast(f"target{DOOMGUARD}")
 
         if tyrant_ready and soul_shards >= 5:
-            return self.cast("target鍙敜鎭堕瓟鏆村悰")
+            return self.cast(f"target{DEMONIC_TYRANT}")
 
         if portal_window or tyrant_window:
             if hand_ready and soul_shards >= 3:
-                return self.cast("target鍙ゅ皵涓逛箣鎵?")
+                return self.cast(f"target{HAND_OF_GULDAN}")
             if demonbolt_ready and (demon_core_stacks >= 1 or soul_shards <= 3):
-                return self.cast("target鎭堕瓟涔嬬")
+                return self.cast(f"target{DEMONBOLT}")
             if dreadstalkers_ready and soul_shards >= 2:
-                return self.cast("target鍙敜鎭愭儳鐚庣姮")
+                return self.cast(f"target{DREADSTALKERS}")
 
         if dreadstalkers_ready and soul_shards >= 2:
-            return self.cast("target鍙敜鎭愭儳鐚庣姮")
+            return self.cast(f"target{DREADSTALKERS}")
 
-        if is_aoe and implosion_ready and latest_succeeded_cast == "鍙ゅ皵涓逛箣鎵?":
-            return self.cast("鍐呯垎")
+        if is_aoe and implosion_ready and latest_succeeded_cast == HAND_OF_GULDAN:
+            return self.cast(IMPLOSION)
 
         if hand_ready and soul_shards >= 4:
-            return self.cast("target鍙ゅ皵涓逛箣鎵?")
+            return self.cast(f"target{HAND_OF_GULDAN}")
 
         if demon_core_stacks >= 3 and demonbolt_ready:
-            return self.cast("target鎭堕瓟涔嬬")
+            return self.cast(f"target{DEMONBOLT}")
 
         if hand_ready and soul_shards >= 3 and not dreadstalkers_ready:
-            return self.cast("target鍙ゅ皵涓逛箣鎵?")
+            return self.cast(f"target{HAND_OF_GULDAN}")
 
         if demonbolt_ready and (demon_core_stacks >= 1 or soul_shards <= 3):
-            return self.cast("target鎭堕瓟涔嬬")
+            return self.cast(f"target{DEMONBOLT}")
 
         if shadow_bolt_ready:
-            return self.cast("target鏆楀奖绠?")
+            return self.cast(f"target{SHADOW_BOLT}")
 
         return self.idle("当前没有合适动作")

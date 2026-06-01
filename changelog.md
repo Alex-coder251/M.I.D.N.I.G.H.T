@@ -2,6 +2,17 @@
 
 ## 2026-06-01
 
+### Fix Demonology Warlock rotation names
+
+- Replaced mojibake spell, macro, buff, and UI strings in `WarlockDemonology.py` with normal Chinese names.
+
+Verification:
+
+- `uv run python -m py_compile terminal\rotation\WarlockDemonology.py` -> passed
+- `git diff --check` -> no whitespace errors
+
+## 2026-06-01
+
 ### Add Demonology Warlock Terminal rotation
 
 - Added a `WarlockDemonology` Terminal rotation for Demonology Warlock Soul Harvester play, following the provided guide's priorities around soul shard spending, Dreadstalkers, Implosion, Demonbolt, Tyrant, and Doomguard windows.
