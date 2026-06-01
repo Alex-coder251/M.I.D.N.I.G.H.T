@@ -3,7 +3,6 @@ from __future__ import annotations
 from terminal.context import Context
 from .base import BaseRotation
 
-
 HAND_OF_GULDAN = "古尔丹之手"
 FELHUNTER = "召唤地狱猎犬"
 IMP = "召唤小鬼"
@@ -76,13 +75,17 @@ class WarlockDemonology(BaseRotation):
             return self.idle("没有合适的远程目标")
 
         soul_shards_cell = ctx.spec.cell(0)
-        soul_shards_ratio = 0.0 if soul_shards_cell is None else soul_shards_cell.decimal
+        soul_shards_ratio = (
+            0.0 if soul_shards_cell is None else soul_shards_cell.decimal
+        )
         soul_shards = round(soul_shards_ratio * 5)
 
         demon_core_stacks = player.buffStack("恶魔之核")
+        wild_imp_stacks = player.buffStack("野生小鬼")
         dreadstalkers_ready = ctx.spell_cooldown_ready(
             DREADSTALKERS, spell_queue_window
         )
+        print(f"恐惧猎犬准备就绪: {dreadstalkers_ready}")
         implosion_ready = ctx.spell_cooldown_ready(IMPLOSION, spell_queue_window)
         hand_ready = ctx.spell_cooldown_ready(HAND_OF_GULDAN, spell_queue_window)
         demonbolt_ready = ctx.spell_cooldown_ready(DEMONBOLT, spell_queue_window)
@@ -111,7 +114,7 @@ class WarlockDemonology(BaseRotation):
         if dreadstalkers_ready and soul_shards >= 2:
             return self.cast(f"target{DREADSTALKERS}")
 
-        if is_aoe and implosion_ready and latest_succeeded_cast == HAND_OF_GULDAN:
+        if implosion_ready and wild_imp_stacks >= 6:
             return self.cast(IMPLOSION)
 
         if hand_ready and soul_shards >= 4:
